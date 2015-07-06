@@ -1,0 +1,12 @@
+Copier fichier dans wamp\bin\php\php5.5.12\ext
+
+Ajouter au fichier php.ini (dans bin de php) : extension=php_phalcon.dll
+
+Ajouter un fichier php.ini (dans apache\bin) : extension=php_phalcon.dll
+
+
+
+
+
+
+
