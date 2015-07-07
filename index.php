@@ -14,26 +14,90 @@ $base->set('db', function(){
 	);
 })
  
+//on charge le micro framework
 $app = new Phalcon\Mvc\Micro($base);
+
+/***********/
+/*** API ***/
+/***********/
 
 /************************************
 **
-** 	CLIENT / PRSOPECT
+**	UTILISATEURS
 **
 *************************************/
+//Recupération depuis le serveur
+$app->get('/api/utilisateurs', function() use (@app) {
+	
+	$phql = "SELECT IdtUtilisateur, Nom, MotDePasse, Email, Salt FROM TABUtilisateur WHERE Actif = 1 AND BitModif = 0 AND BitSup = 0";
+	$utilisateurs = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $utilisateur as $user){
+		$donnees[] = array(
+				'id' => $user->IdtUtilisateur, 
+				'nom' => $user->Nom, 
+				'motDePasse' => $user->MotDePasse,
+				'mail' => $user->Email,
+				'salt' => $user->Salt
+				);
+	}
+	
+	echo json_encode($donnees);
+});
 
+/************************************
+**
+**	PRODUITS
+**
+*************************************/
+//Recupération depuis le serveur
+$app->get('/api/produits', function() use (@app) {
+	
+	$phql = "SELECT 
+				IdtProduit, NomProduit, DescriptionProduit, CategorieProduit, CodeProduit, PrixProduit 
+				FROM TABProduits 
+				WHERE BitModif = 0 AND BitSup = 0 AND Producteur_id IN ( 
+					SELECT IdtSociete FROM TABSociete 
+					WHERE TypeSociete = 'M')";
+					
+	$produits = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $produits as $article){
+		$donnees[] = array(
+				'id' => $article->IdtProduit, 
+				'nom' => $article->NomProduit, 
+				'description' => $article->DescriptionProduit,
+				'categorie' => $article->CategorieProduit,
+				'code' => $article->CodeProduit,
+				'prix' => $article->PrixProduit
+				);
+	}
+	
+	echo json_encode($donnees);
+});
+
+
+/************************************
+**
+** 	CLIENTS / PROSPECTS
+**
+*************************************/
 //Recupération depuis le serveur
 $app->get('/api/societes/{auteur}', function($auteur) use ($app) {
 	
-	$phql = "SELECT NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM Societe WHERE Auteur != :auteur AND BitModif = 0 AND BitSupr = 0 AND TypeSociete != 'M'";
+	$phql = "SELECT IdtSociete, NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM TABSociete WHERE Auteur != :auteur AND BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M'";
 	$societes = $app->modelsManager->executeQuery($phql, array(
 		'auteur' => '%'.$auteur.'%')
 	);
 	
-	$donnee = array();
+	$donnees = array();
 	
 	foreach( $societes as $societe){
-		$donnee[] = array(
+		$donnees[] = array(
 				'id' => $societe->IdtSociete, 
 				'nom' => $societe->NomSociete, 
 				'adresse1' => $societe->Adresse1,
@@ -47,7 +111,7 @@ $app->get('/api/societes/{auteur}', function($auteur) use ($app) {
 				);
 	}
 	
-	echo json_encode($donnee);
+	echo json_encode($donnees);
 });
 
 //Ajout
@@ -165,7 +229,6 @@ $app->put('/api/societes/{id}', function($id) use ($app) {
 $app->delete('/api/societes/', function() use ($app) {
 	
 })
-
 
 /************************************
 **

@@ -1,0 +1,158 @@
+_______________________________________________________
+Compte
+------------------------------------------------------
+IdtCompte 	INTEGER 
+Nom  		TEXT
+MotDePasse 	TEXT
+Mail  		TEXT
+Salt  		TEXT
+Actif 		INTEGER
+IdtContact 	INTEGER
+_______________________________________________________
+Stock
+------------------------------------------------------
+IdtEntree 	INTEGER
+Quantite 	INTEGER
+DelaisMoy 	INTEGER
+Delais 		INTEGER
+_______________________________________________________
+Societe
+------------------------------------------------------
+IdtSociete 		INTEGER
+Nom 		 	TEXT
+Adresse1 	 	TEXT
+Adresse2 	 	TEXT NULL
+CodePostal 	 	TEXT
+Ville 		 	TEXT
+Pays 		 	TEXT
+Type 		 	TEXT 
+Commentaire  	TEXT NULL
+Auteur 		 	TEXT
+BitAjout 		INTEGER 
+BitModif 		INTEGER
+BitSup			INTEGER
+_______________________________________________________
+Produit
+------------------------------------------------------
+IdtProduit 	INTEGER 
+Nom  		TEXT
+Description TEXT
+Categorie  	TEXT
+Code  		TEXT
+Prix 		REAL
+IdtEntree 	INTEGER
+_______________________________________________________
+Contact
+------------------------------------------------------
+IdtContact 	INTEGER 
+Nom  		TEXT
+Prenom  	TEXT
+Poste  		TEXT
+TelFixe  	TEXT
+Fax  		TEXT
+TelMobile  	TEXT
+Mail   		TEXT
+Adresse  	TEXT
+CodePostal  TEXT
+Ville  		TEXT
+Pays   		TEXT
+Commentaire TEXT
+Auteur 		TEXT
+BitAjout 	INTEGER
+BitModif 	INTEGER
+BitSup		INTEGER
+IdtSociete 	INTEGER
+_______________________________________________________
+Bon
+------------------------------------------------------
+IdtBon 			INTEGER 
+DateCommande  	TEXT
+EtatCommande  	TEXT
+Type  			TEXT
+Suivi  			TEXT
+Transporteur  	TEXT
+Auteur  		TEXT
+DateChg  		TEXT
+BitChg  		INTEGER
+BitAjout 		INTEGER
+BitModif 		INTEGER
+BitSup			INTEGER
+IdtSociete 		INTEGER
+IdtContact 		INTEGER
+_______________________________________________________
+LigneCommande
+------------------------------------------------------
+Idt 			INTEGER 
+Quantite 		INTEGER
+Code  			TEXT
+Nom  			TEXT
+Description  	TEXT
+PrixUnitaire 	REAL
+Remise 			REAL
+BitAjout		INTEGER
+BitModif		INTEGER
+BitSup			INTEGER
+IdtBon 			INTEGER
+
+
+
+
+
+
+
+
+_______________________________________________________
+Objectif
+------------------------------------------------------
+IdtObjectif INTEGER
+Annee  		TEXT
+Type   		TEXT
+Libelle  	TEXT
+Valeur  	TEXT
+IdtCompte 	INTEGER
+_______________________________________________________
+Parametre
+------------------------------------------------------
+IdtParam 	INTEGER
+Nom  		TEXT
+Type  		TEXT
+Libelle  	TEXT
+Valeur  	TEXT
+BitAjout 	INTEGER
+BitModif 	INTEGER
+IdtCompte 	INTEGER
+_______________________________________________________
+Evenement
+------------------------------------------------------
+IdtEvent 		INTEGER 
+DateDeb  		TEXT
+DateFin  		TEXT
+Recurrent  		TEXT
+Frequence		TEXT
+Titre  			TEXT
+Emplacement		TEXT
+Commentaire  	TEXT
+Disponibilite  	TEXT
+EstPrive 		INTEGER
+BitAjout 		INTEGER
+BitModif 		INTEGER
+IdtCompte  		INTEGER
+______________________________________________
+Reponse
+------------------------------------------------------
+IdtQuestion 	INTEGER
+Question  		TEXT
+Reponse  		TEXT
+Categorie  		TEXT
+++Type			TEXT				'LIMITE, LIBRE(commentaire)
+IdtSatisfaction INTEGER
+_______________________________________________________
+SatisfactionQ
+------------------------------------------------------
+IdtSatisfaction 	INTEGER
+Nom  				TEXT
+DateEnvoi  			TEXT
+DateRecu  			TEXT
+IdtSociete			INTEGER
+
+

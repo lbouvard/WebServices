@@ -1,0 +1,148 @@
+________________________________________________________________
+TABUtilisateur
+---------------------------------------------------------------
+IdtUtilisateur				integer
+Nom							string 25 unique
+MotDePasse 					string 100
+Email						string 60 unique
+Salt						string 60
+DateModif 					datetime null
+BitModif					bool
+BitSup						bool
+Actif						bool
+________________________________________________________________
+TABStock
+---------------------------------------------------------------
+IdtEntree					integer
+DateEntree					datetime null
+DateSortie					datetime null
+BitSup						boolean
+Produit_id					integer
+________________________________________________________________
+TABSociete
+---------------------------------------------------------------
+IdtSociete					integer
+NomSociete					string 50
+Adresse1					string 50
+Adresse2					string 50 null
+CodePostal					string 10
+Ville						string 50
+Pays						string 50
+TypeSociete					string 25
+Commentaire					text null
+DateModif					datetime null
+BitModif					bool
+BitSup						bool
+________________________________________________________________
+TABProduits
+---------------------------------------------------------------
+IdtProduit					integer
+NomProduit					string 50
+DescriptionProduit			text null
+CategorieProduit			string 50
+CodeProduit					string 25 null
+PrixProduit					float
+DateModif					datetime null
+BitModif					bool
+BitSup						bool
+Producteur_id				integer
+________________________________________________________________
+TABContact
+---------------------------------------------------------------
+IdtContact					integer
+NomContact					string 100
+PrenomContact				string 100
+IntitulePoste				string 100
+TelFixe						string 20 null
+TelMobile					string 20 null
+Fax							string 20 null
+Email						string 100 null
+Adresse1					string 100
+CodePostal					string 10
+Ville						string 50
+Pays						string 50
+Commentaire					text null
+DateModif					datetime null
+BitModif					bool
+BitSup						bool
+Societe_id					integer
+Utilisateur_id				integer
+________________________________________________________________
+TABCommande
+---------------------------------------------------------------
+IdtCommande					integer
+DateCommande				datetime null
+EtatCommande				string 50
+Commentaire					text null
+DateChg						datetime null
+BitChg						bool
+BitSup						bool
+Contact_id					integer
+Societe_id					integer
+________________________________________________________________
+TABCommandeProduits
+---------------------------------------------------------------
+Idt							integer
+CodeProduit					string 50
+NomProduit					string 50
+DescriptionProduit			text null
+Quantite					integer
+PrixProduit					float
+PrixTotal					float
+commande_id					integer
+
+
+
+
+________________________________________________________________
+TABUtilisateur_Role
+---------------------------------------------------------------
+Idt
+utilisateur_id
+role_id
+________________________________________________________________
+TABRole
+---------------------------------------------------------------
+IdtRole						integer
+Role						string 20 unique
+Categorie					string 25 null
+________________________________________________________________
+TABProduction
+---------------------------------------------------------------
+IdtElement					integer
+CodeInterne					string 25
+DateDebut					datetime null
+DateFin						datetime null
+BitRebu						bool
+BitFin						bool
+DateModif					datetime null
+BitModif					bool
+Produit_id					integer
+Chaine_id					integer
+Etat_id						integer
+Causerebu_id				integer
+________________________________________________________________
+TABNomenclature
+---------------------------------------------------------------
+IdtNomenclature				integer
+Quantite					integer
+CodeProduit					string 25
+Produit_id					integer
+________________________________________________________________
+TABListeEtat
+---------------------------------------------------------------
+IdtEtat						integer
+NomEtat						string 50
+Commentaire					text
+________________________________________________________________
+TABListeChaine
+---------------------------------------------------------------
+IdtChaine					integer
+NomChaine					string 25
+Description					text
+________________________________________________________________
+TABListeCauseRebu
+---------------------------------------------------------------
+IdtCause					integer
+NomRebu						string 25
+Description					text
