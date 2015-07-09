@@ -109,7 +109,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // creating required tables
         db.execSQL(CREATE_TABLE_BON);
-        db.execSQL(CREATE_TABLE_REPONSE);
+        db.execSQL(CREATE_TABLE_COM);
         db.execSQL(CREATE_TABLE_COMPTE);
         db.execSQL(CREATE_TABLE_CONTACT);
         db.execSQL(CREATE_TABLE_EVENT);
@@ -330,13 +330,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * LIRE
      ***********************/
 
-    public List<Bon> getBons(String type, String clauseWhere) {
+    public List<Bon> getBons(String type) {
 
         List<Bon> bons = new ArrayList<Bon>();
 
-        String requete = "SELECT rowid, DateCommande, EtatCommande, Suivi, Transporteur, IdtContact, IdtSociete"
+        String requete = "SELECT IdtBon, DateCommande, EtatCommande, Suivi, Transporteur, IdtContact, IdtSociete"
                         + "FROM " + TABLE_BON
-                        + "WHERE " + clauseWhere;
+                        + "WHERE BitChg = 0 AND BitSup = 0";
 
         Log.d("Requete", requete);
 
@@ -348,7 +348,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (c.moveToFirst()) {
                 do {
                     Bon ligne = new Bon(type);
-                    ligne.setId(c.getInt(c.getColumnIndex("rowid")));
+                    ligne.setId(c.getInt(c.getColumnIndex("IdtBon")));
                     ligne.setDate_commande(c.getString(c.getColumnIndex("DateCommande")));
                     ligne.setEtat_commande(c.getString(c.getColumnIndex("EtatCommande")));
                     ligne.setSuivi(c.getString(c.getColumnIndex("Suivi")));
@@ -372,7 +372,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<LigneCommande> getLignesCommande(long id_bon){
 
         List<LigneCommande> lignes = new ArrayList<LigneCommande>();
-        String requete = "SELECT rowid, Quantite, Code, Nom, Description, PrixUnitaire, Remise, IdtBon FROM Ligne_commande"
+        String requete = "SELECT Idt, Quantite, Code, Nom, Description, PrixUnitaire, Remise, IdtBon FROM Ligne_commande"
                             + "WHERE IdtBon = " + id_bon ;
 
         Log.d("Requete", requete);
@@ -385,11 +385,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (c.moveToFirst()) {
                 do {
                     LigneCommande ligne = new LigneCommande();
-                    ligne.setId(c.getInt(c.getColumnIndex("rowid")));
+                    ligne.setId(c.getInt(c.getColumnIndex("Idt")));
                     ligne.setCode(c.getString(c.getColumnIndex("Code")));
                     ligne.setDescription(c.getString(c.getColumnIndex("Description")));
                     ligne.setId_bon(c.getInt(c.getColumnIndex("IdtBon")));
-                    //ligne.setId_produit(c.getInt(c.getColumnIndex("IdtProduit")));
                     ligne.setNom(c.getString(c.getColumnIndex("Nom")));
                     ligne.setPrixUnitaire(c.getDouble(c.getColumnIndex("PrixUnitaire")));
                     ligne.setQuantite(c.getInt(c.getColumnIndex("Quantite")));
@@ -412,8 +411,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Societe getClient(int id_client){
 
         Societe client = new Societe();
-        String requete = "SELECT rowid, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur FROM Societe"
-                        + "WHERE rowid = " + id_client;
+        String requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur FROM Societe"
+                        + "WHERE IdtSociete = " + id_client + " AND BitSup = 0 AND BitModif = 0";
 
         Log.d("Requete", requete);
 
@@ -423,7 +422,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if( c != null) {
             c.moveToFirst();
 
-            client.setId(c.getInt(c.getColumnIndex("rowid")));
+            client.setId(c.getInt(c.getColumnIndex("IdtSociete")));
             client.setNom(c.getString(c.getColumnIndex("Nom")));
             client.setAdresse1(c.getString(c.getColumnIndex("Adresse1")));
             client.setAdresse2(c.getString(c.getColumnIndex("Adresse2")));
@@ -447,7 +446,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Contact commercial = new Contact();
         String requete = "SELECT IdtContact, Nom, Prenom, Poste, TelFixe, Fax, TelMobile, Mail, Adresse, CodePostal, Ville, Pays,"
                         + "Commentaire, Auteur FROM Contact "
-                        + "WHERE IdtContact = " + id_commercial;
+                        + "WHERE IdtContact = " + id_commercial + " AND BitModif = 0 AND BitSup = 0";
 
         Log.d("Requete", requete);
 
@@ -489,7 +488,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "soc.Auteur, cc.Couleur, ifnull(COUNT(con.IdtContact),0) AS Nb " +
                 "FROM Societe soc LEFT JOIN Contact con ON soc.IdtSociete =  con.IdtSociete " +
                 "INNER JOIN CorrespCouleur cc ON soc.Auteur = cc.Nom " +
-                "WHERE soc.Type = 'C' GROUP BY con.IdtContact, soc.IdtSociete ORDER BY soc.IdtSociete";
+                "WHERE soc.Type = 'C' AND soc.BitAjout = 0 AND soc.BitSup = 0 GROUP BY con.IdtContact, soc.IdtSociete ORDER BY soc.IdtSociete";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -533,10 +532,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if( clauseWhere.isEmpty() ) {
             requete = "SELECT IdtContact, Nom, Prenom, Poste, TelFixe, Fax, TelMobile, Mail, Adresse, CodePostal, Ville, Pays,"
                     + "Commentaire, Auteur FROM Contact "
-                    + "WHERE IdtSociete = " + id_societe;
+                    + "WHERE IdtSociete = " + id_societe + " AND BitModif = 0 AND BitSup = 0";
         }
         else{
-            requete = "SELECT rowid, Nom, Prenom, Poste, TelFixe, Fax, TelMobile, Mail, Adresse, CodePostal, Ville, Pays,"
+            requete = "SELECT IdtContact, Nom, Prenom, Poste, TelFixe, Fax, TelMobile, Mail, Adresse, CodePostal, Ville, Pays,"
                     + "Commentaire, Auteur FROM Contact " + clauseWhere;
         }
 
@@ -583,8 +582,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<Parametre> params = new ArrayList<Parametre>();
         String requete = "";
 
-        requete = "SELECT rowid, Nom, Type, Libelle, Valeur FROM Parametre"
-                + "WHERE IdtCompte = " + id_commercial;
+        requete = "SELECT IdtParam, Nom, Type, Libelle, Valeur FROM Parametre"
+                + "WHERE IdtCompte = " + id_commercial + " AND BitModif = 0";
 
         Log.d("Requete", requete);
 
@@ -596,7 +595,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (c.moveToFirst()) {
                 do {
                     Parametre ligne = new Parametre();
-                    ligne.setId(c.getInt(c.getColumnIndex("rowid")));
+                    ligne.setId(c.getInt(c.getColumnIndex("IdtParam")));
                     ligne.setNom(c.getString(c.getColumnIndex("Nom")));
                     ligne.setType(c.getString(c.getColumnIndex("Type")));
                     ligne.setLibelle(c.getString(c.getColumnIndex("Libelle")));
@@ -619,7 +618,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<Objectif> objectifs = new ArrayList<Objectif>();
         String requete = "";
 
-        requete = "SELECT rowid, Annee, Type, Libelle, Valeur FROM Objectif"
+        requete = "SELECT IdtObjectif, Annee, Type, Libelle, Valeur FROM Objectif"
                 + "WHERE IdtCompte = " + id_commercial;
 
         Log.d("Requete", requete);
@@ -632,7 +631,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (c.moveToFirst()) {
                 do {
                     Objectif ligne = new Objectif();
-                    ligne.setId(c.getInt(c.getColumnIndex("rowid")));
+                    ligne.setId(c.getInt(c.getColumnIndex("IdtObjectif")));
                     ligne.setAnnee(c.getString(c.getColumnIndex("Annee")));
                     ligne.setType(c.getString(c.getColumnIndex("Type")));
                     ligne.setLibelle(c.getString(c.getColumnIndex("Libelle")));
@@ -655,7 +654,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<Produit> produits = new ArrayList<Produit>();
         String requete = "";
 
-        requete = "SELECT rowid, Nom, Description, Categorie, Code, Prix, IdtEntree FROM Produit";
+        requete = "SELECT IdtProduit, Nom, Description, Categorie, Code, Prix, IdtEntree FROM Produit";
 
         Log.d("Requete", requete);
 
@@ -668,7 +667,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 do {
                     Produit ligne = new Produit();
 
-                    ligne.setId(c.getInt(c.getColumnIndex("rowid")));
+                    ligne.setId(c.getInt(c.getColumnIndex("IdtProduit")));
                     ligne.setNom(c.getString(c.getColumnIndex("Nom")));
                     ligne.setDescription(c.getString(c.getColumnIndex("Description")));
                     ligne.setCategorie(c.getString(c.getColumnIndex("Categorie")));
@@ -965,24 +964,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	/*****************************
 	*     Synchronisation		
 	******************************/
-	public List<Societe> getSyncClient(String type){
+	//des clients
+	public List<Societe> getSyncClients(int type){
 		
 		List<Societe> clients = new ArrayList<Societe>();
 		Societe client = new Societe();
         String requete = "";
 
-		if( type.equals("AJOUT"")){
+		if( type == 1){
+			//données ajoutées
 			requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur "
 				+ "FROM Societe"
                 + "WHERE BitAjout = 1";
 		}
-		else if( type.equals("MAJ")){
+		else if( type == 2){
+			//données modifiéss
 			requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur "
 				+ "FROM Societe"
                 + "WHERE BitModif = 1";		
 		}
-		else{
-			//données supprimés
+		else if( type == 3){
+			//données supprimées
 			requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur "
 				+ "FROM Societe"
                 + "WHERE BitSup = 1";
@@ -1016,7 +1018,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return clients;
 	}
 	
-	public List<Contact> getSyncContact(String type){
+	//des contacts
+	public List<Contact> getSyncContacts(String type){
 		
 		List<Contact> contacts = new ArrayList<Contact>();
 		Contact contact = new Contact();
@@ -1076,6 +1079,207 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return contacts;
 	}
 
+	//des bons (devis, commandes)
+	public List<Bon> getSyncBons(String type){
+		
+		List<Bon> bons = new ArrayList<Bon>();
+		Bon bon = new Bon();
+		
+		//client
+		Societe client = new Societe();
+		//commercial
+		Contact commercial = new Contact();
+		
+        String requete = "";
+
+		if( type.equals("AJOUT")){
+			requete = "SELECT IdtBon, DateCommande, EtatCommande, Type, Suivi, Transporteur, Auteur, DateChg, BitChg "
+				+ "IdtSociete, IdtContact "
+				+ "FROM Bon "
+                + "WHERE BitAjout = 1 AND BitSup = 0";
+		}
+		else if( type.equals("MAJ")){
+			requete = "SELECT IdtBon, DateCommande, EtatCommande, Type, Suivi, Transporteur, Auteur, DateChg, BitChg "
+				+ "IdtSociete, IdtContact "
+				+ "FROM Bon "
+                + "WHERE BitModif = 1 AND BitAjout = 0";		
+		}
+		else{
+			//données supprimés
+			requete = "SELECT IdtBon, DateCommande, EtatCommande, Type, Suivi, Transporteur, Auteur, DateChg "
+				+ "IdtSociete, IdtContact "
+				+ "FROM Bon "
+                + "WHERE BitSup = 1 AND BitAjout = 0 AND BitModif = 0";
+		}
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(requete, null);
+
+        if( c != null) {
+            //On parcours les bons pour ajouter un objet à la liste.
+            if (c.moveToFirst()) {
+
+				bon.setId(c.getInt(c.getColumnIndex("IdtBon")));
+				bon.setDate_commande(c.getString(c.getColumnIndex("DateCommande")));
+				bon.setEtat_commande(c.getString(c.getColumnIndex("EtatCommande")));
+				bon.setType(c.getString(c.getColumnIndex("Type")));
+				bon.setSuivi(c.getString(c.getColumnIndex("Suivi")));
+				bon.setTransporteur(c.getString(c.getColumnIndex("Transporteur")));
+				bon.setAuteur(c.getString(c.getColumnIndex("Auteur")));
+				bon.setDate_changement(c.getString(c.getColumnIndex("DateChg")));
+				
+				client.setId(c.getInt(c.getColumnIndex("IdtSociete")));
+				bon.setClient(client);
+				commercial.setId(c.getInt(c.getColumnIndex("IdtContact")));
+				bon.setCommercial(commercial);
+				
+				//On ajoute le bon
+				bons.add(bon);
+            }
+            c.close();
+        }
+
+        return bons;
+	}
+	
+	//des produits des bons
+	public List<Bon> getSyncLignes(String type){
+		
+		List<LigneCommande> lignes = new ArrayList<LigneCommande>();
+		LigneCommande ligne = new LigneCommande();
+		Bon bon = new Bon();
+		
+        String requete = "";
+
+		if( type.equals("AJOUT")){
+			requete = "SELECT Idt, Quantite, Code, Nom, Description, PrixUnitaire, Remise, IdtBon "
+				+ "FROM LigneCommande "
+                + "WHERE BitAjout = 1 AND BitSup = 0";
+		}
+		else if( type.equals("MAJ")){
+			requete = "SELECT Idt, Quantite, Code, Nom, Description, PrixUnitaire, Remise, IdtBon "
+				+ "FROM LigneCommande "
+                + "WHERE BitModif = 1 AND BitAjout = 0";		
+		}
+		else{
+			//données supprimés
+			requete = "SELECT Idt, Quantite, Code, Nom, Description, PrixUnitaire, Remise, IdtBon "
+				+ "FROM LigneCommande "
+                + "WHERE BitSup = 1 AND BitAjout = 0 AND BitModif = 0";
+		}
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(requete, null);
+
+        if( c != null) {
+            //On parcours les bons pour ajouter un objet à la liste.
+            if (c.moveToFirst()) {
+
+				ligne.setId(c.getInt(c.getColumnIndex("Idt")));
+				ligne.setQuantite(c.getInt(c.getColumnIndex("Quantite")));
+				ligne.setCode(c.getString(c.getColumnIndex("Code")));
+				ligne.setNom(c.getString(c.getColumnIndex("Nom")));
+				ligne.setDescription(c.getString(c.getColumnIndex("Description")));
+				ligne.setPrixUnitaire(c.getDouble(c.getColumnIndex("PrixUnitaire")));
+				ligne.setRemise(c.getDouble(c.getColumnIndex("Remise")));
+				ligne.setId_bon(c.getInt(c.getColumnIndex("IdtBon")));
+				
+				//On ajoute une ligne pour un article
+				lignes.add(ligne);
+            }
+            c.close();
+        }
+
+        return lignes;
+	}
+	
+	//des événements du calendrier
+	public List<Evenement> getSyncEvenements(String type){
+		
+		List<Evenement> events = new ArrayList<Evenement>();
+		Evenement event = new Evenement();
+
+        String requete = "";
+
+		if( type.equals("AJOUT")){
+			requete = "SELECT IdtEvent, DateDeb, DateFin, Reccurent, Frequence, Titre, Emplacement, "
+				+ "Commentaire, Disponibilite, EstPrive, IdtCompte "
+				+ "FROM Evenement "
+                + "WHERE BitAjout = 1 AND BitSup = 0";
+		}
+		else if( type.equals("MAJ")){
+			requete = "SELECT IdtEvent, DateDeb, DateFin, Reccurent, Frequence, Titre, Emplacement, "
+				+ "Commentaire, Disponibilite, EstPrive, IdtCompte "
+				+ "FROM Evenement "
+                + "WHERE BitModif = 1 AND BitAjout = 0";		
+		}
+		else{
+			//données supprimés
+			requete = "SELECT IdtEvent, DateDeb, DateFin, Reccurent, Frequence, Titre, Emplacement, "
+				+ "Commentaire, Disponibilite, EstPrive, IdtCompte "
+				+ "FROM Evenement "
+                + "WHERE BitSup = 1 AND BitAjout = 0 AND BitModif = 0";
+		}
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(requete, null);
+
+        if( c != null) {
+            //On parcours les bons pour ajouter un objet à la liste.
+            if (c.moveToFirst()) {
+
+				event.setId(c.getInt(c.getColumnIndex("IdtEvent")));
+				event.setDate_debut(c.getString(c.getColumnIndex("DateDeb")));
+				event.setDate_fin(c.getString(c.getColumnIndex("DateFin")));
+				event.setRecurrent(c.getString(c.getColumnIndex("Reccurent")));
+				event.setFrequence(c.getString(c.getColumnIndex("Frequence")));
+				event.setTitre(c.getString(c.getColumnIndex("Titre")));
+				event.setEmplacement(c.getString(c.getColumnIndex("Emplacement")));
+				event.setCommentaire(c.getString(c.getColumnIndex("Commentaire")));
+				event.setDisponibilite(c.getString(c.getColumnIndex("Disponibilite")));
+				event.setEst_prive(c.getInt(c.getColumnIndex("EstPrive")));
+				
+				Compte compte = new Compte();
+				compte.setId(c.getInt(c.getInt(c.getColumnIndex("IdtCompte"))));
+				
+				event.setCompte(compte);
+
+				//On ajoute l'événement du calendrier
+				events.add(event);
+            }
+            c.close();
+        }
+
+        return events;
+	}
+		
+	//pour vider les tables
+	public void tronquerTables(){
+		
+		//Client
+		db.execSQL("TRUNCATE TABLE Societe");
+		//Contact
+		db.execSQL("TRUNCATE TABLE Contact");
+		//Stock
+		db.execSQL("TRUNCATE TABLE Stock");
+		//Produit
+		db.execSQL("TRUNCATE TABLE Compte");
+		//Compte
+		db.execSQL("TRUNCATE TABLE Produit");
+		//Bon
+		db.execSQL("TRUNCATE TABLE Bon");
+		//Article d'une commande
+		db.execSQL("TRUNCATE TABLE LigneCommande");
+		//Objectif
+		db.execSQL("TRUNCATE TABLE Objectif");		
+		//Evenement
+		db.execSQL("TRUNCATE TABLE Evenement");
+		//Réponses questionnaire
+		db.execSQL("TRUNCATE TABLE Reponse");		
+		//Questionnaire
+		db.execSQL("TRUNCATE TABLE SatisfactionQ");		
+		
+	}
 	
     //Populate tables
     public void chargerTables(SQLiteDatabase db){
