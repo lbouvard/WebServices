@@ -1,21 +1,29 @@
-<?php
+ï»¿<?php
+
+//Register autoloader
+$loader = new \Phalcon\Loader();
+
+$loader->registerDirs(array(
+	__DIR__. '/models/'
+))->register();
 
 $base = new \Phalcon\DI\FactoryDefault();
 
-//accès à la base
+//accÃ¨s Ã  la base
 $base->set('db', function(){
-	return new \Phalcon\DB\Adapter\Pdo\Mysql(
+	return new \Phalcon\Db\Adapter\Pdo\Mysql(
 		array(
 			"host" => "localhost",
 			"username" => "UserWeb",
 			"password" => "Uz28*Cesi",
-			"dbname" => "SVRPROD"
+			"dbname" => "svrprod",
+			'charset' => 'utf8'
 		)
 	);
-})
+});
  
 //on charge le micro framework
-$app = new Phalcon\Mvc\Micro($base);
+$app = new \Phalcon\Mvc\Micro($base);
 
 /***********/
 /*** API ***/
@@ -26,15 +34,19 @@ $app = new Phalcon\Mvc\Micro($base);
 **	UTILISATEURS
 **
 *************************************/
-//Recupération depuis le serveur
-$app->get('/api/utilisateurs', function() use (@app) {
+//RecupÃ©ration depuis le serveur
+$app->get('/api/utilisateurs', function() use ($app) {
 	
-	$phql = "SELECT IdtUtilisateur, Nom, MotDePasse, Email, Salt FROM TABUtilisateur WHERE Actif = 1 AND BitModif = 0 AND BitSup = 0";
+	$phql = "SELECT user.IdtUtilisateur, user.Nom, user.MotDePasse, user.Email, user.Salt 
+			FROM tabsociete soc
+			INNER JOIN tabcontact con ON soc.IdtSociete = con.Societe_id
+			INNER JOIN tabutilisateur user ON con.Utilisateur_id = user.IdtUtilisateur
+			WHERE soc.TypeSociete = 'M' AND user.Actif = 1 AND user.BitModif = 0 AND user.BitSup = 0";
 	$utilisateurs = $app->modelsManager->executeQuery($phql);
 	
 	$donnees = array();
 	
-	foreach( $utilisateur as $user){
+	foreach( $utilisateurs as $user){
 		$donnees[] = array(
 				'id' => $user->IdtUtilisateur, 
 				'nom' => $user->Nom, 
@@ -44,7 +56,7 @@ $app->get('/api/utilisateurs', function() use (@app) {
 				);
 	}
 	
-	echo json_encode($donnees);
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
 
 /************************************
@@ -52,18 +64,15 @@ $app->get('/api/utilisateurs', function() use (@app) {
 **	PRODUITS
 **
 *************************************/
-//Recupération depuis le serveur
-$app->get('/api/produits', function() use (@app) {
+//RecupÃ©ration depuis le serveur
+$app->get('/api/produits', function() use ($app) {
 	
-	$phql = "SELECT 
-				IdtProduit, NomProduit, DescriptionProduit, CategorieProduit, CodeProduit, PrixProduit 
-				FROM TABProduits 
-				WHERE BitModif = 0 AND BitSup = 0 AND Producteur_id IN ( 
-					SELECT IdtSociete FROM TABSociete 
-					WHERE TypeSociete = 'M')";
-					
+	$phql = "SELECT prod.IdtProduit, prod.NomProduit, prod.DescriptionProduit, prod.CategorieProduit, prod.CodeProduit, prod.PrixProduit 
+			FROM tabproduits prod
+			INNER JOIN tabsociete soc ON prod.Producteur_id = soc.IdtSociete
+			WHERE prod.BitModif = 0 AND prod.BitSup = 0 AND soc.TypeSociete = 'M'";	
 	$produits = $app->modelsManager->executeQuery($phql);
-	
+
 	$donnees = array();
 	
 	foreach( $produits as $article){
@@ -77,22 +86,19 @@ $app->get('/api/produits', function() use (@app) {
 				);
 	}
 	
-	echo json_encode($donnees);
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
-
 
 /************************************
 **
 ** 	CLIENTS / PROSPECTS
 **
 *************************************/
-//Recupération depuis le serveur
-$app->get('/api/societes/{auteur}', function($auteur) use ($app) {
+//RecupÃ©ration depuis le serveur
+$app->get('/api/societes', function() use ($app) {
 	
-	$phql = "SELECT IdtSociete, NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM TABSociete WHERE Auteur != :auteur AND BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M'";
-	$societes = $app->modelsManager->executeQuery($phql, array(
-		'auteur' => '%'.$auteur.'%')
-	);
+	$phql = "SELECT IdtSociete, NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM tabsociete WHERE BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M' AND TypeSociete != 'F'";
+	$societes = $app->modelsManager->executeQuery($phql);
 	
 	$donnees = array();
 	
@@ -111,14 +117,38 @@ $app->get('/api/societes/{auteur}', function($auteur) use ($app) {
 				);
 	}
 	
-	echo json_encode($donnees);
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
+	
+	/*switch (json_last_error()) {
+        case JSON_ERROR_NONE:
+            echo ' - Aucune erreur';
+        break;
+        case JSON_ERROR_DEPTH:
+            echo ' - Profondeur maximale atteinte';
+        break;
+        case JSON_ERROR_STATE_MISMATCH:
+            echo ' - InadÃ©quation des modes ou underflow';
+        break;
+        case JSON_ERROR_CTRL_CHAR:
+            echo ' - Erreur lors du contrÃ´le des caractÃ¨res';
+        break;
+        case JSON_ERROR_SYNTAX:
+            echo ' - Erreur de syntaxe ; JSON malformÃ©';
+        break;
+        case JSON_ERROR_UTF8:
+            echo ' - CaractÃ¨res UTF-8 malformÃ©s, probablement une erreur d\'encodage';
+        break;
+        default:
+            echo ' - Erreur inconnue';
+        break;
+    }*/
 });
 
 //Ajout
 $app->post('/api/societes', function() use ($app) {
 	
 	$societes = $app->request->getJsonRawBody();
-	$etats = new array();
+	$etats = array();
 	$erreur = false;
 	
 	//Pour chaque client/prospect a 
@@ -128,7 +158,7 @@ $app->post('/api/societes', function() use ($app) {
 				VALUES
 				(:nom, :adresse1, :adresse2, :codePostal, :ville, :pays, :type, :commentaire, :auteur, NULL, 0, 0)";
 				
-		//mise en place des paramètres
+		//mise en place des paramÃ¨tres
 		$etat = $app->modelsManager->executeQuery($phql, array(
 			'nom' => $societe->NomSociete,
 			'adresse1' => $societe->Adresse1,
@@ -145,13 +175,13 @@ $app->post('/api/societes', function() use ($app) {
 			$etats[] = array('Etat' => 'OK', 'Id' => $etat->getModel()->IdtSociete );
 		}
 		else{
-			 $erreurs = array();
+			$erreurs = array();
 			 
 			foreach( $stats->getMessages() as $message){
 				 $erreurs[] = $message->getMessage();
 			}
 			
-			$etats[] = array('Etat' => 'KO', 'Id' => -1, 'Erreur' => $erreurs)
+			$etats[] = array('Etat' => 'KO', 'Id' => -1, 'Erreur' => $erreurs);
 			
 			$erreur = true;
 			
@@ -161,17 +191,17 @@ $app->post('/api/societes', function() use ($app) {
 			
 	}
 	
-	//Réponse HTTP
+	//RÃ©ponse HTTP
 	$reponse = new Phalcon\Http\Response();
 	
 	if( $erreur ){
 		$reponse->setStatusCode(460, "Echec insertion.");
 	}
 	else{
-		$reponse->setStatusCode(201, "Ajout réussi.")
+		$reponse->setStatusCode(201, "Ajout rÃ©ussi.");
 	}
 
-	$reponse->setJsonContent($etats)
+	$reponse->setJsonContent($etats);
 	
 	return $reponse;
 	
@@ -206,7 +236,7 @@ $app->put('/api/societes/{id}', function($id) use ($app) {
 		));		
 		
 		
-		//Mise à jour
+		//Mise Ã  jour
 		$phql = "UPDATE Societe SET Nom = :nom, Adresse1 = :adresse1, Adresse2 = :adresse2, CodePostal = :codePostal, 
 									Ville = :ville, Pays = :pays, TypeSociete = : type, Commentaire = commentaire";
 									
@@ -228,7 +258,7 @@ $app->put('/api/societes/{id}', function($id) use ($app) {
 //Suppresion
 $app->delete('/api/societes/', function() use ($app) {
 	
-})
+});
 
 /************************************
 **
@@ -236,17 +266,44 @@ $app->delete('/api/societes/', function() use ($app) {
 **
 *************************************/
 
-$app->get('/api/contacts', function() {
+$app->get('/api/contacts', function() use ($app) {
 	
-})
+	$phql = " SELECT con.IdtContact, con.NomContact, con.PrenomContact, con.IntitulePoste, 
+			con.TelFixe, con.TelMobile, con.Fax, con.Email, con.Adresse, con.CodePostal, con.Ville, con.Pays, 
+			con.Commentaire, con.Auteur, con.DateModif, con.BitModif, con.BitSup, con.Societe_id, con.Utilisateur_id
+			FROM tabcontact con
+			INNER JOIN tabsociete soc ON con.Societe_id = soc.IdtSociete
+			WHERE con.BitModif = 0 AND con.BitSup = 0 AND soc.TypeSociete != 'F' AND soc.TypeSociete != 'M'";
+			
+	$contacts = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $contacts as $contact){
+		$donnees[] = array(
+				'id' => $contact->IdtContact, 
+				'nom' => $contact->NomContact,
+				'prenom' => $contact->PrenomContact,
+				'poste' => $contact->IntitulePoste,
+				'tel_fixe' => $contact->TelFixe,
+				'tel_mobile' => $contact->TelMobile,
+				'fax' => $contact->Fax,
+				'email' => $contact->Email,
+				'adresse' => $contact->Adresse,
+				'codePostal' => $contact->CodePostal,
+				'ville' => $contact->Ville,
+				'pays' => $contact->Pays,
+				'commentaire' => $contact->Commentaire,
+				'auteur' => $contact->Auteur,
+				'idt_societe' => $contact->Societe_id
+				);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
+});
 
 //les bons
 $app->get('/api/bons', function() {
-	
-});
-
-//les produits
-$app->get('/api/produits', function() {
 	
 });
 
@@ -255,7 +312,7 @@ $app->get('/api/evenements', function() {
 	
 });
 
-//Paramètres
+//ParamÃ¨tres
 $app->get('/api/parametres', function() {
 	
 });
@@ -265,14 +322,14 @@ $app->get('/api/objectifs', function() {
 	
 });
 
-//Données de satisfactions
+//DonnÃ©es de satisfactions
 $app->get('/api/satisfactions', function() {
 	
 });
 
 /* AJOUT depuis l'application Android */
 
-//les sociétés
+//les sociÃ©tÃ©s
 $app->post('/api/societes', function() {
 	
 });
@@ -280,7 +337,7 @@ $app->post('/api/societes', function() {
 //les contacts
 $app->post('/api/contacts', function() {
 	
-})
+});
 
 //les bons
 $app->post('/api/bons', function() {
@@ -292,14 +349,14 @@ $app->post('/api/evenements', function() {
 	
 });
 
-//Paramètres
+//ParamÃ¨tres
 $app->post('/api/parametres', function() {
 	
 });
 
 /* MODIFICATION depuis l'application Android */
 
-//les sociétés
+//les sociÃ©tÃ©s
 $app->put('/api/societes', function() {
 	
 });
@@ -307,21 +364,21 @@ $app->put('/api/societes', function() {
 //les contacts
 $app->put('/api/contacts', function() {
 	
-})
+});
 
 //les bons
 $app->put('/api/bons', function() {
 	
 });
 
-//Paramètres
+//ParamÃ¨tres
 $app->put('/api/parametres', function() {
 	
 });
 
 /* SUPPRESION depuis l'application Android */
 
-//les sociétés
+//les sociÃ©tÃ©s
 $app->post('/api/societes', function() {
 	
 });
@@ -329,7 +386,7 @@ $app->post('/api/societes', function() {
 //les contacts
 $app->post('/api/contacts', function() {
 	
-})
+});
 
 //les bons
 $app->post('/api/bons', function() {
@@ -341,7 +398,7 @@ $app->post('/api/evenements', function() {
 	
 });
 
-//Paramètres
+//ParamÃ¨tres
 $app->post('/api/parametres', function() {
 	
 });
