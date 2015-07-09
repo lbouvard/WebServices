@@ -5,10 +5,10 @@ use Phalcon\Mvc\Model,
 	Phalcon\Mvc\Model\Validator\InclusionIn,
 	Phalcon\Mvc\Model\Validator\Uniqueness;
 	
-class Societe extends Model
+class tabutilisateur extends Model
 {
 	public function validation(){
-		
+		/*
 		//type client ou prospect
 		$this->validate( new InclusionIn(
 			array(
@@ -23,7 +23,7 @@ class Societe extends Model
 				"field" => "Nom",
 				"message" => "La société est déjà présente."
 			)
-		));
+		));*/
 		
 		//controle code postal
 		
