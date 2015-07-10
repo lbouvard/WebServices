@@ -28,9 +28,9 @@ Pays 		 	TEXT
 Type 		 	TEXT 
 Commentaire  	TEXT NULL
 Auteur 		 	TEXT
-BitAjout 		INTEGER 
-BitModif 		INTEGER
-BitSup			INTEGER
+BitAjout 		INTEGER
+BitSup
+ATraiter 		INTEGER
 _______________________________________________________
 Produit
 ------------------------------------------------------
@@ -59,9 +59,8 @@ Pays   		TEXT
 Commentaire TEXT
 Auteur 		TEXT
 BitAjout 	INTEGER
-BitModif 	INTEGER
 BitSup		INTEGER
-IdtSociete 	INTEGER
+ATraiter	INTEGER
 _______________________________________________________
 Bon
 ------------------------------------------------------
@@ -75,10 +74,8 @@ Auteur  		TEXT
 DateChg  		TEXT
 BitChg  		INTEGER
 BitAjout 		INTEGER
-BitModif 		INTEGER
-BitSup			INTEGER
-IdtSociete 		INTEGER
-IdtContact 		INTEGER
+BitSup 			INTEGER
+ATraiter		INTEGER
 _______________________________________________________
 LigneCommande
 ------------------------------------------------------
@@ -90,17 +87,9 @@ Description  	TEXT
 PrixUnitaire 	REAL
 Remise 			REAL
 BitAjout		INTEGER
-BitModif		INTEGER
 BitSup			INTEGER
 IdtBon 			INTEGER
-
-
-
-
-
-
-
-
+ATraiter		INTEGER
 _______________________________________________________
 Objectif
 ------------------------------------------------------
@@ -135,8 +124,9 @@ Commentaire  	TEXT
 Disponibilite  	TEXT
 EstPrive 		INTEGER
 BitAjout 		INTEGER
-BitModif 		INTEGER
+BitSup			INTEGER
 IdtCompte  		INTEGER
+ATraiter		INTEGER
 ______________________________________________
 Reponse
 ------------------------------------------------------

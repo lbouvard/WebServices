@@ -10,6 +10,7 @@ DateModif 					datetime null
 BitModif					bool
 BitSup						bool
 Actif						bool
+++Histo_id					integer
 ________________________________________________________________
 TABStock
 ---------------------------------------------------------------
@@ -33,6 +34,7 @@ Commentaire					text null
 DateModif					datetime null
 BitModif					bool
 BitSup						bool
+++Histo_id					integer
 ________________________________________________________________
 TABProduits
 ---------------------------------------------------------------
@@ -46,6 +48,7 @@ DateModif					datetime null
 BitModif					bool
 BitSup						bool
 Producteur_id				integer
+++Histo_id					integer
 ________________________________________________________________
 TABContact
 ---------------------------------------------------------------
@@ -79,6 +82,7 @@ BitChg						bool
 BitSup						bool
 Contact_id					integer
 Societe_id					integer
+++Histo_id					integer
 ________________________________________________________________
 TABCommandeProduits
 ---------------------------------------------------------------

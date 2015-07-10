@@ -11,8 +11,7 @@ CREATE TABLE IF NOT EXISTS `tabsociete` (
   `DateModif` datetime DEFAULT NULL,
   `BitModif` tinyint(1) NOT NULL,
   `BitSup` tinyint(1) NOT NULL,
-  PRIMARY KEY (`IdtSociete`),
-  UNIQUE KEY (`NomSociete`)
+  PRIMARY KEY (`IdtSociete`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
 
 INSERT INTO tabsociete 
@@ -37,8 +36,7 @@ CREATE TABLE IF NOT EXISTS `tabutilisateur` (
   `BitModif` tinyint(1) NOT NULL,
   `BitSup` tinyint(1) NOT NULL,
   `Actif` tinyint(1) NOT NULL,
-  PRIMARY KEY (`IdtUtilisateur`),
-  UNIQUE KEY `Nom` (`Nom`,`Email`)
+  PRIMARY KEY (`IdtUtilisateur`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;	
 
 INSERT INTO tabutilisateur
@@ -61,7 +59,6 @@ CREATE TABLE IF NOT EXISTS `tabproduits` (
   `BitSup` tinyint(1) NOT NULL,
   `Producteur_id` int(11) NOT NULL,
   PRIMARY KEY (`IdtProduit`),
-  UNIQUE KEY `NomProduit` (`NomProduit`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
 
 INSERT INTO tabproduits
@@ -94,8 +91,7 @@ CREATE TABLE IF NOT EXISTS `tabcontact` (
   `BitSup` tinyint(1) NOT NULL,
   `Societe_id` int(11) NOT NULL,
   `Utilisateur_id` int(11) NOT NULL,
-  PRIMARY KEY (`IdtContact`),
-  UNIQUE KEY `Email` (`Email`)
+  PRIMARY KEY (`IdtContact`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
 
 INSERT INTO tabcontact

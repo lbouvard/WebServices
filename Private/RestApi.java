@@ -27,7 +27,7 @@ public class RESTApi {
 	private static final String API_LIGNES_MAJ		= "http://localhost/api/lignes/maj";
 	
 	private static final String API_EVENEMENT 		= "http://localhost/api/evenements";
-	private static final String API_EVENEMENT_AJT 	= "http://localhost/api/evenements/alt";
+	private static final String API_EVENEMENT_AJT 	= "http://localhost/api/evenements/ajt";
 	private static final String API_EVENEMENT_MAJ 	= "http://localhost/api/evenements/maj";
 	
 	private static final String API_UTILISATEUR = "http://localhost/api/utilisateurs";

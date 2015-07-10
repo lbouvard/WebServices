@@ -97,7 +97,9 @@ $app->get('/api/produits', function() use ($app) {
 //Recupération depuis le serveur
 $app->get('/api/societes', function() use ($app) {
 	
-	$phql = "SELECT IdtSociete, NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM tabsociete WHERE BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M' AND TypeSociete != 'F'";
+	$phql = "SELECT IdtSociete, NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur 
+			FROM tabsociete 
+			WHERE BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M' AND TypeSociete != 'F'";
 	$societes = $app->modelsManager->executeQuery($phql);
 	
 	$donnees = array();
@@ -145,7 +147,7 @@ $app->get('/api/societes', function() use ($app) {
 });
 
 //Ajout
-$app->post('/api/societes', function() use ($app) {
+$app->post('/api/societes/ajt', function() use ($app) {
 	
 	$societes = $app->request->getJsonRawBody();
 	$etats = array();
@@ -208,7 +210,7 @@ $app->post('/api/societes', function() use ($app) {
 });
 
 //Modification
-$app->put('/api/societes/{id}', function($id) use ($app) {
+$app->post('/api/societes/maj', function() use ($app) {
 	
 	$societes = $app->request->getJsonRawBody();
 
@@ -252,11 +254,6 @@ $app->put('/api/societes/{id}', function($id) use ($app) {
 			'auteur' => $societe->Auteur
 		));
 	}
-	
-});
-
-//Suppresion
-$app->delete('/api/societes/', function() use ($app) {
 	
 });
 

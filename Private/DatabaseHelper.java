@@ -45,11 +45,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_SOCIETE = "CREATE TABLE Societe (IdtSociete INTEGER PRIMARY KEY, Nom TEXT NOT NULL,"
             + "Adresse1 TEXT NOT NULL, Adresse2 TEXT, CodePostal TEXT NOT NULL, Ville TEXT NOT NULL , Pays TEXT NOT NULL, Type TEXT NOT NULL, Commentaire  TEXT,"
-            + "Auteur TEXT NOT NULL, BitAjout INTEGER NOT NULL, BitModif INTEGER NOT NULL, BitSup INTEGER NOT NULL)";
+            + "Auteur TEXT NOT NULL, BitAjout INTEGER NOT NULL, BitSup INTEGER NOT NULL, ATraiter INTEGER NOT NULL)";
 
     private static final String CREATE_TABLE_CONTACT = "CREATE TABLE Contact(IdtContact INTEGER PRIMARY KEY, Nom TEXT NOT NULL,"
             + "Prenom TEXT NOT NULL, Poste TEXT, TelFixe TEXT, Fax TEXT, TelMobile TEXT, Mail  TEXT, Adresse TEXT, CodePostal  TEXT, Ville TEXT, Pays  TEXT,"
-            + "Commentaire TEXT, Auteur TEXT NOT NULL, BitAjout INTEGER NOT NULL, BitModif INTEGER NOT NULL, BitSup INTEGER NOT NULL, IdtSociete INTEGER NOT NULL,"
+            + "Commentaire TEXT, Auteur TEXT NOT NULL, BitAjout INTEGER NOT NULL, BitSup INTEGER NOT NULL, ATraiter INTEGER NOT NULL, IdtSociete INTEGER NOT NULL,"
             + "FOREIGN KEY (IdtSociete) REFERENCES Societe(IdtSociete))";
 
     private static final String CREATE_TABLE_COMPTE= "CREATE TABLE Compte(IdtCompte INTEGER PRIMARY KEY, Nom TEXT NOT NULL,"
@@ -58,7 +58,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_BON = "CREATE TABLE Bon(IdtBon INTEGER PRIMARY KEY, DateCommande TEXT NOT NULL,"
             + "EtatCommande TEXT, Type TEXT, Suivi TEXT, Transporteur TEXT, Auteur TEXT NOT NULL, DateChg TEXT, BitChg  INTEGER NOT NULL,"
-            + "BitAjout INTEGER NOT NULL, BitModif INTEGER NOT NULL, BitSup INTEGER NOT NULL, IdtSociete INTEGER NOT NULL, IdtContact INTEGER NOT NULL,"
+            + "BitAjout INTEGER NOT NULL, BitSup INTEGER NOT NULL, ATraiter INTEGER NOT NULL, IdtSociete INTEGER NOT NULL, IdtContact INTEGER NOT NULL,"
             + "FOREIGN KEY (IdtSociete) REFERENCES Societe(IdtSociete),"
             + "FOREIGN KEY (IdtContact) REFERENCES Contact(IdtContact))";
 
@@ -75,8 +75,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY (IdtCompte) REFERENCES Compte(IdtCompte))";
 
     private static final String CREATE_TABLE_PARAM = "CREATE TABLE Parametre(IdtParam INTEGER PRIMARY KEY,"
-            + "Nom TEXT NOT NULL, Type TEXT NOT NULL, Libelle TEXT NOT NULL, Valeur TEXT NOT NULL, BitAjout INTEGER NOT NULL,"
-            + "BitModif INTEGER NOT NULL, IdtCompte INTEGER NOT NULL,"
+            + "Nom TEXT NOT NULL, Type TEXT NOT NULL, Libelle TEXT NOT NULL, Valeur TEXT NOT NULL, "
+            + "ATraiter INTEGER NOT NULL, IdtCompte INTEGER NOT NULL, "
             + "FOREIGN KEY (IdtCompte) REFERENCES Compte(IdtCompte))";
 
     private static final String CREATE_TABLE_REPONSE = "CREATE TABLE Reponse(IdtQuestion INTEGER PRIMARY KEY,"
@@ -89,12 +89,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_EVENT = "CREATE TABLE Evenement(IdtEvent INTEGER PRIMARY KEY, DateDeb TEXT NOT NULL,"
             + "DateFin TEXT NOT NULL, Recurrent TEXT, Frequence TEXT, Titre TEXT NOT NULL, Emplacement TEXT NOT NULL, Commentaire TEXT NOT NULL,"
-            + "Disponibilite TEXT NOT NULL, EstPrive INTEGER NOT NULL, BitAjout INTEGER NOT NULL, BitModif INTEGER NOT NULL, IdtCompte  INTEGER NOT NULL,"
+            + "Disponibilite TEXT NOT NULL, EstPrive INTEGER NOT NULL, BitAjout INTEGER NOT NULL, BitSup INTEGER NOT NULL, ATraiter INTEGER NOT NULL, IdtCompte  INTEGER NOT NULL,"
             + "FOREIGN KEY (IdtCompte) REFERENCES Compte(IdtCompte))";
 
     private static final String CREATE_TABLE_LIGNE = "CREATE TABLE LigneCommande(Idt INTEGER PRIMARY KEY, Quantite INTEGER NOT NULL,"
             + "Code TEXT, Nom TEXT NOT NULL, Description TEXT, PrixUnitaire REAL NOT NULL, Remise REAL NOT NULL,"
-            + "IdtBon INTEGER NOT NULL,"
+            + "IdtBon INTEGER NOT NULL, BitAjout INTEGER NOT NULL, BitSupr INTEGER NOT NULL, ATraiter INTEGER NOT NULL, "
             + "FOREIGN KEY (IdtBon) REFERENCES Bon(IdtBon))";
 
     private static final String CREATE_TABLE_CORRESP_COULEUR = "CREATE TABLE CorrespCouleur (IdtLigne INTEGER PRIMARY KEY, Nom TEXT NOT NULL,"
@@ -164,10 +164,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Suivi", "");
         valeurs.put("Transporteur", "");
         valeurs.put("Auteur", devis.getAuteur());
-        valeurs.put("DateChg", DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date()));
-        valeurs.put("BitChg", 0);
+        //valeurs.put("DateChg", DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date()));
+        valeurs.put("DateChg", null);
+		valeurs.put("BitChg", 0);
         valeurs.put("BitAjout", 1);
-        valeurs.put("BitModif", 0);
+        valeurs.put("BitSup", 0);
+		valeurs.put("ATraiter", 1);
         valeurs.put("IdtSociete", devis.getClient().getId());
         valeurs.put("IdtContact", devis.getCommercial().getId());
 
@@ -189,14 +191,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues valeurs = new ContentValues();
         valeurs.put("DateCommande", bon.getDate_commande());
         valeurs.put("EtatCommande", bon.getEtat_commande());
-        valeurs.put("Type", "DE");
+        valeurs.put("Type", "CD");
         valeurs.put("Suivi", "");
         valeurs.put("Transporteur", "");
         valeurs.put("Auteur", bon.getAuteur());
-        valeurs.put("DateChg", DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date()));
-        valeurs.put("BitChg", 0);
+        valeurs.put("DateChg", null);
+		valeurs.put("BitChg", 0);
         valeurs.put("BitAjout", 1);
-        valeurs.put("BitModif", 0);
+        valeurs.put("BitSup", 0);
+		valeurs.put("ATraiter", 1);
         valeurs.put("IdtSociete", bon.getClient().getId());
         valeurs.put("IdtContact", bon.getCommercial().getId());
 
@@ -222,6 +225,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Description", ligne.getDescription());
         valeurs.put("Remise", ligne.getRemise());
         valeurs.put("PrixUnitaire", ligne.getPrixUnitaire());
+        valeurs.put("BitAjout", 1);
+        valeurs.put("BitSup", 0);
+		valeurs.put("ATraiter", 1);
         valeurs.put("IdtBon", bon_id);
 
         return db.insert(TABLE_LIGNE, null, valeurs);
@@ -242,7 +248,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Commentaire", client.getCommentaire());
         valeurs.put("Auteur", client.getAuteur());
         valeurs.put("BitAjout", 1);
-        valeurs.put("BitModif", 0);
+        valeurs.put("BitSup", 0);
+		valeurs.put("ATraiter", 1);
 
         db.insert(TABLE_SOCIETE, null, valeurs);
         db.close();
@@ -267,12 +274,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Commentaire", contact.getCommentaire());
         valeurs.put("Auteur", contact.getAuteur());
         valeurs.put("BitAjout", 1);
-        valeurs.put("BitModif", 0);
+        valeurs.put("BitSup", 0);
+		valeurs.put("ATraiter", 1);
         valeurs.put("IdtSociete", contact.getSociete().getId());
 
         return db.insert(TABLE_CONTACT, null, valeurs);
     }
-
+/*
     //Ajouter un parametre
     public long ajouterParametre(Parametre param){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -287,7 +295,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("IdtCompte", param.getCompte().getId());
 
         return db.insert(TABLE_PARAM, null, valeurs);
-    }
+    }*/
 
     //Ajouter un événement
     public long ajouterEvenement(Evenement e) {
@@ -304,12 +312,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Disponibilite", e.getDisponibilite());
         valeurs.put("EstPrive", e.getEst_prive());
         valeurs.put("BitAjout", 1);
-        valeurs.put("BitModif", 0);
+        valeurs.put("BitSup", 0);
         valeurs.put("IdtCompte", e.getCompte().getId());
+		valeurs.put("ATraiter", 1);
 
         return db.insert(TABLE_EVENT, null, valeurs);
     }
 
+	/*
     //Ajouter un compte (seulement IT)
     public long ajouterCompte(Compte cp){
 
@@ -324,7 +334,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("IdtContact", cp.getContact_id());
 
         return db.insert(TABLE_COMPTE, null, valeurs);
-    }
+    }*/
 
     /***********************
      * LIRE
@@ -334,11 +344,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         List<Bon> bons = new ArrayList<Bon>();
 
-        String requete = "SELECT IdtBon, DateCommande, EtatCommande, Suivi, Transporteur, IdtContact, IdtSociete"
-                        + "FROM " + TABLE_BON
-                        + "WHERE BitChg = 0 AND BitSup = 0";
-
-        Log.d("Requete", requete);
+        String requete = "SELECT IdtBon, DateCommande, EtatCommande, Suivi, Transporteur, IdtContact, IdtSociete "
+                        + "FROM Bon "
+                        + "WHERE Type = '" + type + "' AND BitChg = 0 AND BitSup = 0";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -372,10 +380,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<LigneCommande> getLignesCommande(long id_bon){
 
         List<LigneCommande> lignes = new ArrayList<LigneCommande>();
-        String requete = "SELECT Idt, Quantite, Code, Nom, Description, PrixUnitaire, Remise, IdtBon FROM Ligne_commande"
-                            + "WHERE IdtBon = " + id_bon ;
-
-        Log.d("Requete", requete);
+        String requete = "SELECT Idt, Quantite, Code, Nom, Description, PrixUnitaire, Remise, IdtBon "
+						+ "FROM Ligne_commande "
+                        + "WHERE IdtBon = " + id_bon + " AND BitSup = 0";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -411,10 +418,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Societe getClient(int id_client){
 
         Societe client = new Societe();
-        String requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur FROM Societe"
-                        + "WHERE IdtSociete = " + id_client + " AND BitSup = 0 AND BitModif = 0";
-
-        Log.d("Requete", requete);
+        String requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur " 
+						+ "FROM Societe "
+                        + "WHERE IdtSociete = " + id_client + " AND BitSup = 0";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -446,9 +452,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Contact commercial = new Contact();
         String requete = "SELECT IdtContact, Nom, Prenom, Poste, TelFixe, Fax, TelMobile, Mail, Adresse, CodePostal, Ville, Pays,"
                         + "Commentaire, Auteur FROM Contact "
-                        + "WHERE IdtContact = " + id_commercial + " AND BitModif = 0 AND BitSup = 0";
-
-        Log.d("Requete", requete);
+                        + "WHERE IdtContact = " + id_commercial + " AND BitSup = 0";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -488,7 +492,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "soc.Auteur, cc.Couleur, ifnull(COUNT(con.IdtContact),0) AS Nb " +
                 "FROM Societe soc LEFT JOIN Contact con ON soc.IdtSociete =  con.IdtSociete " +
                 "INNER JOIN CorrespCouleur cc ON soc.Auteur = cc.Nom " +
-                "WHERE soc.Type = 'C' AND soc.BitAjout = 0 AND soc.BitSup = 0 GROUP BY con.IdtContact, soc.IdtSociete ORDER BY soc.IdtSociete";
+                "WHERE soc.Type = 'C' soc.BitSup = 0 GROUP BY con.IdtContact, soc.IdtSociete ORDER BY soc.IdtSociete";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -532,14 +536,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if( clauseWhere.isEmpty() ) {
             requete = "SELECT IdtContact, Nom, Prenom, Poste, TelFixe, Fax, TelMobile, Mail, Adresse, CodePostal, Ville, Pays,"
                     + "Commentaire, Auteur FROM Contact "
-                    + "WHERE IdtSociete = " + id_societe + " AND BitModif = 0 AND BitSup = 0";
+                    + "WHERE IdtSociete = " + id_societe + " AND BitSup = 0";
         }
         else{
             requete = "SELECT IdtContact, Nom, Prenom, Poste, TelFixe, Fax, TelMobile, Mail, Adresse, CodePostal, Ville, Pays,"
                     + "Commentaire, Auteur FROM Contact " + clauseWhere;
         }
-
-        Log.d("Requete", requete);
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -582,10 +584,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<Parametre> params = new ArrayList<Parametre>();
         String requete = "";
 
-        requete = "SELECT IdtParam, Nom, Type, Libelle, Valeur FROM Parametre"
-                + "WHERE IdtCompte = " + id_commercial + " AND BitModif = 0";
-
-        Log.d("Requete", requete);
+        requete = "SELECT IdtParam, Nom, Type, Libelle, Valeur FROM Parametre "
+                + "WHERE IdtCompte = " + id_commercial;
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -618,10 +618,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<Objectif> objectifs = new ArrayList<Objectif>();
         String requete = "";
 
-        requete = "SELECT IdtObjectif, Annee, Type, Libelle, Valeur FROM Objectif"
+        requete = "SELECT IdtObjectif, Annee, Type, Libelle, Valeur FROM Objectif "
                 + "WHERE IdtCompte = " + id_commercial;
-
-        Log.d("Requete", requete);
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -655,8 +653,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String requete = "";
 
         requete = "SELECT IdtProduit, Nom, Description, Categorie, Code, Prix, IdtEntree FROM Produit";
-
-        Log.d("Requete", requete);
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -692,10 +688,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Stock info = new Stock();
         String requete = "";
 
-        requete = "SELECT Quantite, DelaisMoy, Delais FROM Stock"
+        requete = "SELECT Quantite, DelaisMoy, Delais FROM Stock "
                 + "WHERE IdtEntree = " + id_entree;
-
-        Log.d("Requete", requete);
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
@@ -726,8 +720,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String requete = "SELECT Salt FROM Compte "
                 + "WHERE Nom = '" + login + "' OR Mail = '" + login + "'";
 
-        Log.d("Requete", requete);
-
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
 
@@ -750,8 +742,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String requete = "SELECT IdtContact FROM Compte "
                         + "WHERE Nom = '" + login + "' And MotDePasse = '" + motDePasse + "'";
 
-        Log.d("Requete", requete);
-
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
 
@@ -771,6 +761,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     /*Pour la satisfaction cliente : A faire.*/
 
+	/* */
+	
     /***********************
      * METTRE A JOUR
      ***********************/
@@ -789,7 +781,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Commentaire", client.getCommentaire());
         valeurs.put("Auteur", client.getAuteur());
         valeurs.put("BitAjout", 0);
-        valeurs.put("BitModif", 1);
+        valeurs.put("ATraiter", 1);
 
         // updating row
         db.update(TABLE_SOCIETE, valeurs, "IdtSociete = ?",
@@ -817,7 +809,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Commentaire", contact.getCommentaire());
         valeurs.put("Auteur", contact.getAuteur());
         valeurs.put("BitAjout", modif_nouveau);
-        valeurs.put("BitModif", 1);
+        valeurs.put("ATraiter", 1);
         valeurs.put("IdtSociete", contact.getSociete().getId());
 
         // updating row
@@ -834,10 +826,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Type", param.getType());
         valeurs.put("Libelle", param.getLibelle());
         valeurs.put("Valeur", param.getValeur());
-        valeurs.put("BitAjout", modif_nouveau);
-        valeurs.put("BitModif", 1);
+        valeurs.put("ATraiter", 1);
 
-        // updating row
+        //mise à jour du paramètre
         db.update(TABLE_PARAM, valeurs, "IdtParam = ?",
                 new String[] { String.valueOf(param.getId()) });
     }
@@ -857,7 +848,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Disponibilite", e.getDisponibilite());
         valeurs.put("EstPrive", e.getEst_prive());
         valeurs.put("BitAjout", modif_nouveau);
-        valeurs.put("BitModif", 1);
+        valeurs.put("BitSup", 0);
+		valeurs.put("ATraiter", 1);
 
         // updating row
         db.update(TABLE_EVENT, valeurs, "IdtEvent = ?",
@@ -906,10 +898,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valeurs.put("Description", ligne.getDescription() );
         valeurs.put("Remise", ligne.getRemise() );
         valeurs.put("PrixUnitaire", ligne.getPrixUnitaire() );
+		valeurs.put("ATraiter", 1);
 
-        // updating row
-        db.update(TABLE_LIGNE, valeurs, "Idt = ?",
-                new String[] { String.valueOf(ligne.getId()) });
+		if( ligne.isAjoute() ){
+			valeurs.put("BitAjout", 1);
+			valeurs.put("BitSup", 0);
+			db.insert(TABLE_LIGNE, null, valeurs);
+		}
+		else{
+			if( ligne.isSupprime() ){
+				valeurs.put("BitSup", 1);
+				valeurs.put("BitAjout", 0);
+			}
+			else{
+				valeurs.put("BitAjout", 0);
+				valeurs.put("BitSup", 0);
+			}
+			
+			// updating row
+			db.update(TABLE_LIGNE, valeurs, "Idt = ?",
+					new String[] { String.valueOf(ligne.getId()) });
+		}
     }
 
     /***********************
@@ -965,30 +974,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	*     Synchronisation		
 	******************************/
 	//des clients
-	public List<Societe> getSyncClients(int type){
+	public List<Societe> getSyncClients(){
 		
 		List<Societe> clients = new ArrayList<Societe>();
 		Societe client = new Societe();
         String requete = "";
 
-		if( type == 1){
-			//données ajoutées
-			requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur "
-				+ "FROM Societe"
-                + "WHERE BitAjout = 1";
-		}
-		else if( type == 2){
-			//données modifiéss
-			requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur "
-				+ "FROM Societe"
-                + "WHERE BitModif = 1";		
-		}
-		else if( type == 3){
-			//données supprimées
-			requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville, Pays, Type, Commentaire, Auteur "
-				+ "FROM Societe"
-                + "WHERE BitSup = 1";
-		}
+		//données à traiter
+		requete = "SELECT IdtSociete, Nom, Adresse1, Adresse2, CodePostal, Ville , "
+				+ "Pays, Type, Commentaire, Auteur, BitAjout, BitSup "
+				+ "FROM Societe "
+                + "WHERE ATraiter = 1";
+
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(requete, null);
