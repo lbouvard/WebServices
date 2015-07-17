@@ -153,9 +153,10 @@ $app->post('/api/societes/ajt', function() use ($app) {
 	$etats = array();
 	$erreur = false;
 	
-	//Pour chaque client/prospect a 
+	//Pour chaque client/prospect
 	foreach( $societes as $societe ){
-		$phql = "INSERT INTO Societe 
+		
+		$phql = "INSERT INTO tabsociete 
 				(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSupr)
 				VALUES
 				(:nom, :adresse1, :adresse2, :codePostal, :ville, :pays, :type, :commentaire, :auteur, NULL, 0, 0)";
@@ -298,6 +299,74 @@ $app->get('/api/contacts', function() use ($app) {
 	
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
+
+$app->post('/api/contacts/ajt', function() use ($app) {
+	
+	$contacts = $app->request->getJsonRawBody();
+	$etats = array();
+	$erreur = false;
+	
+	//Pour chaque contact
+	foreach( $contacts as $contact){
+		
+		var_dump($contact);
+		
+		$phql = "INSERT INTO tabcontact 
+				(NomContact, PrenomContact, IntitulePoste, TelFixe, TelMobile, Fax, Email, Adresse, CodePostal, Ville, Pays, Commentaire, Auteur, DateModif, BitModif, BitSup, Societe_id, Utilisateur_id)
+				VALUES
+				(:nom, :prenom, :poste, :fixe, :mobile, :fax, :mail, :adresse, :codePostal, :ville, :pays, :commentaire, :auteur, NULL, 0, 0, :societe, -1)";
+				
+		//mise en place des paramètres
+		$etat = $app->modelsManager->executeQuery($phql, array(
+			'nom' => $contact->nom,
+			'prenom' => $contact->prenom,
+			'poste' => $contact->poste,
+			'fixe' => $contact->fixe,
+			'mobile' => $contact->mobile,
+			'fax' => $contact->fax,
+			'mail' => $contact->mail,
+			'adresse' => $contact->adresse,
+			'codePostal' => $contact->codePostal,
+			'ville' => $contact->ville,
+			'pays' => $contact->pays,
+			'commentaire' => $contact->commentaire,
+			'auteur' => $contact->auteur,
+			'societe' => $contact->societe,
+		));
+		/*
+		if( $etat->success() == true ){
+			$etats[] = array('Etat' => 'OK', 'Id' => $etat->getModel()->IdtContact);
+		}
+		else{
+			$erreurs = array();
+				
+			foreach( $stats->getMessages() as $message){
+				 $erreurs[] = $message->getMessage();
+			}
+			
+			$etats[] = array('Etat' => 'KO', 'Id' => -1, 'Erreur' => $erreurs);
+			
+			$erreur = true;
+			
+			//on sort de la boucle
+			break;
+		}		*/
+	}
+	
+	$reponse = new Phalcon\Http\Response();
+	
+	if( $erreur ){
+		$reponse->setStatusCode(460, "Echec insertion.");
+	}
+	else{
+		$reponse->setStatusCode(201, "Ajout réussi.");
+	}
+	
+	$reponse->setJsonContent($etats);
+	
+	return $reponse;
+});
+
 
 //les bons
 $app->get('/api/bons', function() {

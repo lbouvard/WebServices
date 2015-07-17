@@ -61,6 +61,7 @@ Auteur 		TEXT
 BitAjout 	INTEGER
 BitSup		INTEGER
 ATraiter	INTEGER
+IdtSociete 	INTEGER
 _______________________________________________________
 Bon
 ------------------------------------------------------

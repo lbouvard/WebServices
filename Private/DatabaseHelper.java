@@ -927,7 +927,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void suppprimerSociete(Societe client, boolean supprimer_contact){
 
-        SQLiteDatabase db = this.getWritableDatabase();
+        /*SQLiteDatabase db = this.getWritableDatabase();
 
         if( supprimer_contact ){
             db.delete(TABLE_CONTACT, "IdtSociete = ?",
@@ -935,14 +935,53 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         db.delete(TABLE_SOCIETE, "IdtSociete = ?",
-                new String[]{String.valueOf(client.getId())});
+                new String[]{String.valueOf(client.getId())});*/
+				
+		SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues valeurs = new ContentValues();
+        /*valeurs.put("Nom", client.getNom());
+        valeurs.put("Adresse1", client.getAdresse1());
+        valeurs.put("Adresse2", client.getAdresse2());
+        valeurs.put("CodePostal", client.getCode_postal());
+        valeurs.put("Ville", client.getVille());
+        valeurs.put("Pays", client.getPays());
+        valeurs.put("Commentaire", client.getCommentaire());
+        valeurs.put("Auteur", client.getAuteur());
+        valeurs.put("BitModif", 0);*/
+		valeurs.put("DateModif", client.getDateModif());
+        valeurs.put("BitSup", 1);
+			
+		// updating row
+		db.update(TABLE_LIGNE, valeurs, "IdtSociete = ?",
+				new String[] { String.valueOf(ligne.getId()) });	
+				
     }
 
     public void supprimerContact(Contact contact){
 
         SQLiteDatabase db = this.getWritableDatabase();
 
-        db.delete(TABLE_CONTACT, "IdtContact = ?",
+        ContentValues valeurs = new ContentValues();
+       /* valeurs.put("Nom", contact.getNom());
+        valeurs.put("Prenom", contact.getPrenom());
+        valeurs.put("Poste", contact.getPoste());
+        valeurs.put("TelFixe", contact.getTel_fixe());
+        valeurs.put("Fax", contact.getFax());
+        valeurs.put("TelMobile", contact.getTel_mobile());
+        valeurs.put("Mail", contact.getEmail());
+        valeurs.put("Adresse", contact.getAdresse());
+        valeurs.put("CodePostal", contact.getCode_postal());
+        valeurs.put("Ville", contact.getVille());
+        valeurs.put("Pays", contact.getPays());
+        valeurs.put("Commentaire", contact.getCommentaire());
+        valeurs.put("Auteur", contact.getAuteur());
+        valeurs.put("BitAjout", modif_nouveau);*/
+		valeurs.put("BitSup", 1);
+        valeurs.put("ATraiter", 1);
+        //valeurs.put("IdtSociete", contact.getSociete().getId());
+
+        db.update(TABLE_CONTACT, "IdtContact = ?",
                 new String[]{String.valueOf(contact.getId())} );
     }
 

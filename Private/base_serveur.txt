@@ -60,11 +60,12 @@ TelFixe						string 20 null
 TelMobile					string 20 null
 Fax							string 20 null
 Email						string 100 null
-Adresse1					string 100
+Adresse						string 100
 CodePostal					string 10
 Ville						string 50
 Pays						string 50
 Commentaire					text null
+++Auteur					string 50U
 DateModif					datetime null
 BitModif					bool
 BitSup						bool
