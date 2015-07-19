@@ -1,6 +1,27 @@
 package com.plastprod.plastprodapp;
 
+import android.content.Context;
+import android.widget.Switch;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.*;
+
+import org.apache.http.Header;
+import org.apache.http.entity.StringEntity;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import sqlite.helper.Bon;
+import sqlite.helper.Contact;
+import sqlite.helper.Evenement;
+import sqlite.helper.LigneCommande;
+import sqlite.helper.Societe;
 
 public class RESTApi {
 
@@ -9,8 +30,15 @@ public class RESTApi {
 	//pour serialiser / déserialiser les objets
 	Gson gson;
 	Context context;
-	
-	private static final string API_CLIENT			= "http://localhost/api/societes"
+
+    //les données à récupérer
+    List<Societe> liste_clients;
+    List<Contact> liste_contacts;
+    List<Bon> liste_bons;
+    List<LigneCommande> liste_articles;
+    List<Evenement> liste_evenements;
+
+	private static final String API_CLIENT			= "http://localhost/api/societes";
 	private static final String API_CLIENT_AJT		= "http://localhost/api/societes/ajt";
 	private static final String API_CLIENT_MAJ 		= "http://localhost/api/societes/maj";
 	
@@ -39,30 +67,38 @@ public class RESTApi {
 	private static final String API_SATISF 		= "http://localhost/api/satisfactions";
 
 	//constructeur
-	public RestApi(Context context) {		
+	public RESTApi(Context context) {
 		client = new AsyncHttpClient();
 		gson = new Gson();
 		this.context = context;
 	}
 
-	public JSONObject recupererDepuisWS(String url, RequestParams parametres){
-		
-		JSONObject resultat = null;
+	public void recupererDepuisWS(String url, RequestParams parametres, final String type){
+
 		int codeRetour = 200;
-		
-		client.get(url, parametres, new AsyncHttpResponseHandler() {
-			
+        JSONObject retour = null;
+
+        client.get(url, parametres, new AsyncHttpResponseHandler() {
+
 			//Réponse OK
 			@Override
-			public void onSuccess(String reponse) {
+			public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
 
 				try {
+
+                    String reponse = new String(responseBody, StandardCharsets.UTF_8);
+
 					// JSON Object
 					JSONObject obj = new JSONObject(reponse);
-					
-					//TODO : test de la réponse
-				
-					resultat = obj;
+
+					//Mise en place des données
+                    switch (type) {
+
+                        case "Societes":
+                            setClients(obj);
+                        default:
+
+                    }
 				} 
 				catch (JSONException e) {
 					e.printStackTrace();
@@ -71,36 +107,42 @@ public class RESTApi {
 			
 			//Erreur
 			@Override
-			public void onFailure(int statusCode, Throwable error, String content) {
-				
-				//TODO tracer l'erreur
+			public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+				//Erreur
 			}
-		});
 
-		return resultat;
+		});
 	}
 	
-	public int envoyerVersWS(String url, String donneesJSON){
-		
-		int Etat = 0;
-		StringEntity entite = new StringEntity(donneesJSON);
-		
-		client.post(context, url, entite, new AsyncHttpResponseHandler() {
-			
-			//Réponse 200 OK
-			@Override
-			public void onSuccess(String response) {
-				Etat = 1;
-			}
-			
-			//Erreur
-			@Override
-			public void onFailure(int statusCode, Throwable error, String content) {
-				Etat = statusCode;
-			}
-		});
+	public void envoyerVersWS(String url, String donneesJSON){
 
-		return Etat;
+        StringEntity entite = null;
+        RequestParams params = null;
+
+        try {
+            entite = new StringEntity(donneesJSON, "UTF-8");
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+        params = new RequestParams();
+        params.put("data", entite);
+
+		client.post(context, url, params, new AsyncHttpResponseHandler() {
+
+            //Réponse 200 OK
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                //Traiter
+            }
+
+            //Erreur
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                //Erreur
+            }
+        });
 	}
 
 	public int envoyerClients(int methode, List<Societe> liste_clients){
@@ -120,8 +162,8 @@ public class RESTApi {
 			}
 		}
 		catch(Exception e){
-			printStackTrace();
-			return -1
+			e.printStackTrace();
+			return -1;
 		}
 		
 		return 1;
@@ -143,8 +185,8 @@ public class RESTApi {
 
 		}
 		catch(Exception e){
-			printStackTrace();
-			return -1
+			e.printStackTrace();
+			return -1;
 		}
 		
 		return 1;		
@@ -166,8 +208,8 @@ public class RESTApi {
 
 		}
 		catch(Exception e){
-			printStackTrace();
-			return -1
+            e.printStackTrace();
+            return -1;
 		}
 		
 		return 1;		
@@ -189,8 +231,8 @@ public class RESTApi {
 
 		}
 		catch(Exception e){
-			printStackTrace();
-			return -1
+            e.printStackTrace();
+            return -1;
 		}
 		
 		return 1;		
@@ -212,26 +254,25 @@ public class RESTApi {
 
 		}
 		catch(Exception e){
-			printStackTrace();
-			return -1
+            e.printStackTrace();
+            return -1;
 		}
 		
 		return 1;		
 	}
-			
-	public List<Societe> recupererClients(String auteur){
-		
-		List<Societe> liste_clients;
-		
+
+    public void setClients(JSONObject donnees){
+
+        Type type_liste = new TypeToken<ArrayList<Societe>>() {}.getType();
+        liste_clients = gson.fromJson(donnees.toString(), type_liste);
+
+    }
+
+	public void recupererClients(){
+
 		RequestParams parametres = new RequestParams();
-		//parametres.put("auteur", auteur);
-		
-		//on recupère les données JSON
-		JSONObject obj = recupererDepuisWS(API_CLIENT, parametres)
-		
-		Type type_liste = new TypeToken<ArrayList<Societe>>() {}.getType();
-		liste_clients = gson.fromJson(obj, type_liste);
-		
-		return liste_clients;
+		//on intérroge le web service
+		recupererDepuisWS(API_CLIENT, parametres, "Societes");
+
 	}
 }

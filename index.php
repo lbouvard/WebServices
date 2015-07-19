@@ -153,6 +153,9 @@ $app->post('/api/societes/ajt', function() use ($app) {
 	$etats = array();
 	$erreur = false;
 	
+	var_dump($societes);
+	exit(0);
+	
 	//Pour chaque client/prospect
 	foreach( $societes as $societe ){
 		
