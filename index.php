@@ -158,23 +158,22 @@ $app->post('/api/societes/ajt', function() use ($app) {
 	
 	//Pour chaque client/prospect
 	foreach( $societes as $societe ){
-		
 		$phql = "INSERT INTO tabsociete 
-				(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSupr)
+				(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSup)
 				VALUES
-				(:nom, :adresse1, :adresse2, :codePostal, :ville, :pays, :type, :commentaire, :auteur, NULL, 0, 0)";
+				(:nom:, :adresse1:, :adresse2:, :codePostal:, :ville:, :pays:, :type:, :commentaire:, :auteur:, NULL, 0, 0)";
 				
 		//mise en place des paramètres
 		$etat = $app->modelsManager->executeQuery($phql, array(
-			'nom' => $societe->NomSociete,
-			'adresse1' => $societe->Adresse1,
-			'adresse2' => $societe->Adresse2,
-			'codePostal' => $societe->CodePostal,
-			'ville' => $societe->Ville,
-			'pays' => $societe->Pays,
-			'type' => $societe->TypeSociete,
-			'commentaire' => $societe->Commentaire,
-			'auteur' => $societe->Auteur
+			'nom' => $societe->nom,
+			'adresse1' => $societe->adresse1,
+			'adresse2' => $societe->adresse2,
+			'codePostal' => $societe->codePostal,
+			'ville' => $societe->ville,
+			'pays' => $societe->pays,
+			'type' => $societe->type,
+			'commentaire' => $societe->commentaire,
+			'auteur' => $societe->auteur
 		));
 		
 		if( $etat->success() == true ){
@@ -194,9 +193,8 @@ $app->post('/api/societes/ajt', function() use ($app) {
 			//on sort de la boucle
 			break;
 		}
-			
 	}
-	
+			
 	//Réponse HTTP
 	$reponse = new Phalcon\Http\Response();
 	
