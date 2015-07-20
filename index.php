@@ -153,9 +153,6 @@ $app->post('/api/societes/ajt', function() use ($app) {
 	$etats = array();
 	$erreur = false;
 	
-	var_dump($societes);
-	exit(0);
-	
 	//Pour chaque client/prospect
 	foreach( $societes as $societe ){
 		$phql = "INSERT INTO tabsociete 
@@ -218,43 +215,56 @@ $app->post('/api/societes/maj', function() use ($app) {
 
 	foreach($societes as $societe){
 		
-		//on sauvegarde les valeurs en cours
-		$phql = "SELECT NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM Societe WHERE IdtSociete = ".$id;
-		$sauvegarde = $app->modelsManager->executeQuery($phsql);
+		if( !$societe->ASupprimer ){
+			//on sauvegarde les valeurs en cours
+			$phql = "SELECT NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM tabsociete WHERE IdtSociete = ".$societe->id;
+			$sauvegarde = $app->modelsManager->executeQuery($phql);
+			
+			$phql = "INSERT INTO tabsociete 
+			(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSupr)
+			VALUES
+			(:nom:, :adresse1:, :adresse2:, :codePostal:, :ville:, :pays:, :type:, :commentaire:, :auteur:, NOW(), 1, 0)";
+					
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'nom' => $sauvegarde->nom,
+				'adresse1' => $sauvegarde->adresse1,
+				'adresse2' => $sauvegarde->adresse2,
+				'codePostal' => $sauvegarde->codePostal,
+				'ville' => $sauvegarde->ville,
+				'pays' => $sauvegarde->pays,
+				'type' => $sauvegarde->type,
+				'commentaire' => $sauvegarde->commentaire,
+				'auteur' => $sauvegarde->auteur
+			));		
+		}
 		
-		$phql = "INSERT INTO Societe 
-		(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSupr)
-		VALUES
-		(:nom, :adresse1, :adresse2, :codePostal, :ville, :pays, :type, :commentaire, :auteur, NOW(), 1, 0)";
+		//SUPPRESION
+		if( $societe->ASupprimer ){
+			$phql = "UPDATE tabsociete SET BitSup = 1, DateModif = NOW() 
+						WHERE IdtSociete = :id:";	
+
+			$etat = $app->modelsManager->executeQuery($phql, array(
+			'id' => $societe->id
+			));				
+		}
+		else{
+			//MAJ
+			$phql = "UPDATE tabsociete SET Nom = :nom:, Adresse1 = :adresse1:, Adresse2 = :adresse2:, CodePostal = :codePostal:, 
+									Ville = :ville:, Pays = :pays:, TypeSociete = :type:, Commentaire = :commentaire:
+				WHERE IdtSociete = :id:";
 				
-		$etat = $app->modelsManager->executeQuery($phql, array(
-			'nom' => $sauvegarde->NomSociete,
-			'adresse1' => $sauvegarde->Adresse1,
-			'adresse2' => $sauvegarde->Adresse2,
-			'codePostal' => $sauvegarde->CodePostal,
-			'ville' => $sauvegarde->Ville,
-			'pays' => $sauvegarde->Pays,
-			'type' => $sauvegarde->TypeSociete,
-			'commentaire' => $sauvegarde->Commentaire,
-			'auteur' => $sauvegarde->Auteur
-		));		
-		
-		
-		//Mise à jour
-		$phql = "UPDATE Societe SET Nom = :nom, Adresse1 = :adresse1, Adresse2 = :adresse2, CodePostal = :codePostal, 
-									Ville = :ville, Pays = :pays, TypeSociete = : type, Commentaire = commentaire";
-									
-		$etat = $app->modelsManager->executeQuery($phql, array(
-			'nom' => $societe->NomSociete,
-			'adresse1' => $societe->Adresse1,
-			'adresse2' => $societe->Adresse2,
-			'codePostal' => $societe->CodePostal,
-			'ville' => $societe->Ville,
-			'pays' => $societe->Pays,
-			'type' => $societe->TypeSociete,
-			'commentaire' => $societe->Commentaire,
-			'auteur' => $societe->Auteur
-		));
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'nom' => $sauvegarde->nom,
+				'adresse1' => $sauvegarde->adresse1,
+				'adresse2' => $sauvegarde->adresse2,
+				'codePostal' => $sauvegarde->codePostal,
+				'ville' => $sauvegarde->ville,
+				'pays' => $sauvegarde->pays,
+				'type' => $sauvegarde->type,
+				'commentaire' => $sauvegarde->commentaire,
+				'auteur' => $sauvegarde->auteur
+			));
+		}
 	}
 	
 });
