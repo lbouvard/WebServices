@@ -46,6 +46,20 @@ VALUES
 	('dupond.jean', 'xs2y6GqgDMuy1G+jJxelOTeouwIeVwdad1/vUJi3U87fDNfpNiiNkFoLcGmt/pYHIVvjgs0Xb48Fys2zFjaAxQ==', 'jean.dupond@plasprod.fr', '5703c8599affgku67f20c76ff6ec0116', null, 0, 0, 1),
 	('super.admin', 'whqoSMIHm68/KSh1L4mvV/aWen4c4VlIQ9RBPYzCAFkDBwtJBgZcraI9at0uzqXyjda7n5LiJn5Nybd9NlP8Iw==', 'admin@plastprod.fr', '0575f5b5602389cf17daf9bbbc5b4e7a', null, 0, 0, 1)
 
+CREATE TABLE IF NOT EXISTS tabutilisateur_role (
+	Idt int(11) NOT NULL AUTO_INCREMENT,
+    utilisateur_id int(11) NOT NULL,
+    role_id int(11) NOT NULL,
+	PRIMARY KEY (Idt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+	
+CREATE TABLE IF NOT EXISTS tabrole (
+	IdtRole int(11) NOT NULL AUTO_INCREMENT,
+    NomRole varchar(50) COLLATE utf8_bin NOT NULL,
+    Role varchar(20) COLLATE utf8_bin NOT NULL,
+    Categorie varchar(25) COLLATE utf8_bin NOT NULL,
+	PRIMARY KEY (IdtRole)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
 	
 CREATE TABLE IF NOT EXISTS `tabproduits` (
   `IdtProduit` int(11) NOT NULL AUTO_INCREMENT,
@@ -148,3 +162,66 @@ VALUES
 	('FD13633', 'CommandeClim',  'Bloc commande climatisation', 4, 85, 340, 2),
 	('PE14542', 'Comodo542', 'Dock prise mobile', 2, 18, 36, 2),
 	('RE15208', 'Comodo208', 'Boite à gant granuleux', 15, 58, 870, 2)
+	
+CREATE TABLE IF NOT EXISTS `tablistecauserebu` (
+	`IdtCause` int(11) NOT NULL AUTO_INCREMENT,
+	`NomRebu` varchar(50) COLLATE utf8_bin NOT NULL,
+    `Description` text COLLATE utf8_bin,
+	PRIMARY KEY (`IdtCause`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tablistechaine` (
+	`IdtChaine` int(11) NOT NULL AUTO_INCREMENT,
+	`NomChaine` varchar(50) COLLATE utf8_bin NOT NULL,
+    `Description` text COLLATE utf8_bin,
+	PRIMARY KEY (`IdtChaine`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tablisteetat` (
+	`IdtEtat` int(11) NOT NULL AUTO_INCREMENT,
+    `NomEtat` varchar(50) COLLATE utf8_bin NOT NULL,
+    `Commentaire` text COLLATE utf8_bin,
+	PRIMARY KEY (`IdtEtat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tabnomenclature` (
+	`IdtNomenclature` int(11) NOT NULL AUTO_INCREMENT,
+    `Quantite` int(11) NOT NULL,
+    `CodeProduit` varchar(25) COLLATE utf8_bin NOT NULL,
+    `Produit_id` int(11) NOT NULL,
+	PRIMARY KEY (`IdtNomenclature`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS tabstock (
+	IdtEntree int(11) NOT NULL AUTO_INCREMENT,
+    DateEntree datetime DEFAULT NULL,
+    DateSortie datetime DEFAULT NULL,
+    BitSup int(11) NOT NULL,
+    Produit_id int(11) NOT NULL,
+	PRIMARY KEY (IdtEntree)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS tabproduction (
+	IdtElement int(11) NOT NULL AUTO_INCREMENT,
+    CodeInterne varchar(25) COLLATE utf8_bin NOT NULL,
+    DateDebut datetime DEFAULT NULL,
+    DateFin datetime DEFAULT NULL,
+    BitRebu int(11) NOT NULL,
+    BitFin int(11) NOT NULL,
+    DateModif datetime DEFAULT NULL,
+    BitModif int(11) NOT NULL,
+    Produit_id int(11) NOT NULL,
+    Chaine_id int(11) NOT NULL,
+    Etat_id int(11) NOT NULL,
+    Causerebu_id int(11) NOT NULL,
+    PRIMARY KEY (IdtElement)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tabsynchronisation` (
+  `Idt` int(11) NOT NULL AUTO_INCREMENT,
+  `Commercial` varchar(50) COLLATE utf8_bin NOT NULL,
+  `Type` varchar(10) COLLATE utf8_bin NOT NULL,
+  `IdtAndroid` int(11) NOT NULL,
+  `IdtServeur` int(11) NOT NULL,
+  PRIMARY KEY (`Idt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;

@@ -140,7 +140,7 @@ Categorie  		TEXT
 ++Type			TEXT				'LIMITE, LIBRE(commentaire)
 IdtSatisfaction INTEGER
 _______________________________________________________
-SatisfactionQ
+Satisfaction
 ------------------------------------------------------
 IdtSatisfaction 	INTEGER
 Nom  				TEXT

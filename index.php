@@ -155,6 +155,7 @@ $app->post('/api/societes/ajt', function() use ($app) {
 	
 	//Pour chaque client/prospect
 	foreach( $societes as $societe ){
+		
 		$phql = "INSERT INTO tabsociete 
 				(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSup)
 				VALUES
@@ -266,7 +267,6 @@ $app->post('/api/societes/maj', function() use ($app) {
 			));
 		}
 	}
-	
 });
 
 /************************************
@@ -320,12 +320,10 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 	//Pour chaque contact
 	foreach( $contacts as $contact){
 		
-		var_dump($contact);
-		
 		$phql = "INSERT INTO tabcontact 
 				(NomContact, PrenomContact, IntitulePoste, TelFixe, TelMobile, Fax, Email, Adresse, CodePostal, Ville, Pays, Commentaire, Auteur, DateModif, BitModif, BitSup, Societe_id, Utilisateur_id)
 				VALUES
-				(:nom, :prenom, :poste, :fixe, :mobile, :fax, :mail, :adresse, :codePostal, :ville, :pays, :commentaire, :auteur, NULL, 0, 0, :societe, -1)";
+				(:nom:, :prenom:, :poste:, :fixe:, :mobile:, :fax:, :mail:, :adresse:, :codePostal:, :ville:, :pays:, :commentaire:, :auteur:, NULL, 0, 0, :societe:, -1)";
 				
 		//mise en place des paramètres
 		$etat = $app->modelsManager->executeQuery($phql, array(
@@ -344,7 +342,7 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 			'auteur' => $contact->auteur,
 			'societe' => $contact->societe,
 		));
-		/*
+		
 		if( $etat->success() == true ){
 			$etats[] = array('Etat' => 'OK', 'Id' => $etat->getModel()->IdtContact);
 		}
@@ -361,7 +359,7 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 			
 			//on sort de la boucle
 			break;
-		}		*/
+		}		
 	}
 	
 	$reponse = new Phalcon\Http\Response();
@@ -378,108 +376,86 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 	return $reponse;
 });
 
+$app->post('/api/contacts/maj', function() use ($app) {
+	
+});
 
+/************************************
+**
+** 	     BONS
+**
+*************************************/
 //les bons
-$app->get('/api/bons', function() {
+$app->get('/api/bons', function() use ($app) {
 	
 });
 
-//Evenements
-$app->get('/api/evenements', function() {
+$app->get('/api/articles', function() use ($app) {
 	
 });
 
-//Paramètres
-$app->get('/api/parametres', function() {
+$app->post('/api/bons/ajt', function() use ($app) {
 	
 });
 
-//Objectifs
-$app->get('/api/objectifs', function() {
+$app->post('/api/bons/maj', function() use ($app) {
 	
 });
 
-//Données de satisfactions
-$app->get('/api/satisfactions', function() {
+$app->post('/api/articles/ajt', function() use ($app) {
 	
 });
 
-/* AJOUT depuis l'application Android */
-
-//les sociétés
-$app->post('/api/societes', function() {
+$app->post('/api/articles/maj', function() use ($app) {
 	
 });
 
-//les contacts
-$app->post('/api/contacts', function() {
+/************************************
+**
+** 	     EVENEMENTS
+**
+*************************************/
+$app->get('/api/evenements', function() use ($app) {
 	
 });
 
-//les bons
-$app->post('/api/bons', function() {
+/************************************
+**
+** 	     PARAMETRES
+**
+*************************************/
+$app->get('/api/parametres', function() use ($app) {
 	
 });
 
-//Evenements
-$app->post('/api/evenements', function() {
+/************************************
+**
+** 	     OBJECTIFS
+**
+*************************************/
+$app->get('/api/objectifs', function() use ($app) {
 	
 });
 
-//Paramètres
-$app->post('/api/parametres', function() {
+/************************************
+**
+** 	     SATISFACTIONS
+**
+*************************************/
+$app->get('/api/satisfactions', function() use ($app) {
 	
 });
 
-/* MODIFICATION depuis l'application Android */
-
-//les sociétés
-$app->put('/api/societes', function() {
+/************************************
+**
+** 	     REPONSES
+**
+*************************************/
+$app->get('/api/reponses', function() use ($app) {
 	
 });
 
-//les contacts
-$app->put('/api/contacts', function() {
-	
-});
-
-//les bons
-$app->put('/api/bons', function() {
-	
-});
-
-//Paramètres
-$app->put('/api/parametres', function() {
-	
-});
-
-/* SUPPRESION depuis l'application Android */
-
-//les sociétés
-$app->post('/api/societes', function() {
-	
-});
-
-//les contacts
-$app->post('/api/contacts', function() {
-	
-});
-
-//les bons
-$app->post('/api/bons', function() {
-	
-});
-
-//Evenements
-$app->post('/api/evenements', function() {
-	
-});
-
-//Paramètres
-$app->post('/api/parametres', function() {
-	
-});
-
+//Gestionnaire
 $app->handle();
 
 ?>
