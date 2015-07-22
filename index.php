@@ -175,7 +175,7 @@ $app->post('/api/societes/ajt', function() use ($app) {
 		));
 		
 		if( $etat->success() == true ){
-			$etats[] = array('Etat' => 'OK', 'Id' => $etat->getModel()->IdtSociete );
+			$etats[] = array('Etat' => 'OK', 'NewId' => $etat->getModel()->IdtSociete, 'OldId' => $societe->id );
 		}
 		else{
 			$erreurs = array();
