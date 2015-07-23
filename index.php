@@ -274,7 +274,6 @@ $app->post('/api/societes/maj', function() use ($app) {
 ** 	     CONTACTS
 **
 *************************************/
-
 $app->get('/api/contacts', function() use ($app) {
 	
 	$phql = " SELECT con.IdtContact, con.NomContact, con.PrenomContact, con.IntitulePoste, 
@@ -387,11 +386,53 @@ $app->post('/api/contacts/maj', function() use ($app) {
 *************************************/
 //les bons
 $app->get('/api/bons', function() use ($app) {
+
+	$phql = "SELECT IdtCommande, DateCommande, EtatCommande, Commentaire, DateChg, Auteur, Contact_id, Societe_id
+			FROM tabcommande 
+			WHERE BitSup = 0";
+	$bons = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $bons as $bon){
+		$donnees[] = array(
+			'id' => $bon->IdtCommande, 
+			'date' => $bon->DateCommande, 
+			'etat' => $bon->EtatCommande,
+			'commentaire' => $bon->Commentaire,
+			'datechg' => $bon->DateChg,
+			'auteur' => $bon->Auteur,
+			'contact_id' => $bon->Contact_id,
+			'societe_id' => $bon->Societe_id
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 	
 });
-
+//les articles d'un bon
 $app->get('/api/articles', function() use ($app) {
 	
+	$phql = "SELECT Idt, CodeProduit, NomProduit, DescriptionProduit, Quantite, PrixProduit, PrixTotal, commande_id 
+			FROM tabcommandeproduits";
+	$articles = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $articles as $article){
+		$donnees[] = array(
+			'id' => $article->Idt, 
+			'code' => $article->CodeProduit, 
+			'nom' => $article->NomProduit,
+			'description' => $article->DescriptionProduit,
+			'quantite' => $article->Quantite,
+			'prix' => $article->PrixProduit,
+			'prix_total' => $article->PrixTotal,
+			'commande_id' => $article->commande_id
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
 
 $app->post('/api/bons/ajt', function() use ($app) {
@@ -415,8 +456,35 @@ $app->post('/api/articles/maj', function() use ($app) {
 ** 	     EVENEMENTS
 **
 *************************************/
-$app->get('/api/evenements', function() use ($app) {
+$app->get('/api/evenements/{id:[0-9]+}', function($id) use ($app) {
 	
+	$phql = "SELECT IdtEvent, DateDeb, DateFin, Recurrent, Frequence, Titre, Emplacement, Commentaire, Disponibilite, EstPrive, IdtCompte 
+			FROM tabevenement 
+			WHERE BitSup = 0 AND BitModif = 0 AND IdtCompte = :id:";
+			
+	$events = $app->modelsManager->executeQuery($phql, array(
+		'id' => $id
+	));
+	
+	$donnees = array();
+	
+	foreach( $events as $event){
+		$donnees[] = array(
+			'id' => $event->IdtEvent, 
+			'ddeb' => $event->DateDeb, 
+			'dfin' => $event->DateFin,
+			'recurrent' => $event->Recurrent,
+			'frequence' => $event->Frequence,
+			'titre' => $event->Titre,
+			'emplacement' => $event->Emplacement,
+			'commentaire' => $event->Commentaire,
+			'disponibilite' => $event->Disponibilite,
+			'est_prive' => $event->EstPrive,
+			'compte_id' => $event->IdtCompte
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
 
 /************************************
@@ -424,8 +492,28 @@ $app->get('/api/evenements', function() use ($app) {
 ** 	     PARAMETRES
 **
 *************************************/
-$app->get('/api/parametres', function() use ($app) {
+$app->get('/api/parametres/{id: [0-9]+}', function($id) use ($app) {
 	
+	$phql = "SELECT IdtParam, Nom, Type, Libelle, Valeur 
+			FROM tabparametre 
+			WHERE IdtCompte = :id:";
+	$params = $app->modelsManager->executeQuery($phql, array(
+		'id' => $id
+	));
+	
+	$donnees = array();
+	
+	foreach( $params as $param){
+		$donnees[] = array(
+			'id' => $param->IdtParam, 
+			'nom' => $param->Nom, 
+			'type' => $param->Type,
+			'libelle' => $param->Libelle,
+			'valeur' => $param->Valeur
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
 
 /************************************
@@ -433,8 +521,28 @@ $app->get('/api/parametres', function() use ($app) {
 ** 	     OBJECTIFS
 **
 *************************************/
-$app->get('/api/objectifs', function() use ($app) {
+$app->get('/api/objectifs/{id: [0-9]+}', function($id) use ($app) {
 	
+	$phql = "SELECT IdtObjectif, Annee, Type, Libelle, Valeur 
+			FROM tabobjectif 
+			WHERE IdtCompte = :id:";
+	$objectifs = $app->modelsManager->executeQuery($phql, array(
+		'id' => $id
+	));
+	
+	$donnees = array();
+	
+	foreach( $objectifs as $objectif){
+		$donnees[] = array(
+			'id' => $objectif->IdtObjectif, 
+			'annee' => $objectif->Annee, 
+			'type' => $objectif->Type,
+			'libelle' => $objectif->Libelle,
+			'valeur' => $objectif->Valeur
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
 
 /************************************
@@ -442,7 +550,27 @@ $app->get('/api/objectifs', function() use ($app) {
 ** 	     SATISFACTIONS
 **
 *************************************/
-$app->get('/api/satisfactions', function() use ($app) {
+$app->get('/api/satisfactions/{id: [0-9]+}', function($id) use ($app) {
+	
+	$phql = "SELECT IdtSatisfaction, Nom, DateEnvoi, DateRecu 
+			FROM tabsatisfaction 
+			WHERE IdtSociete = :id:";
+	$satisfactions = $app->modelsManager->executeQuery($phql, array(
+		'id' => $id
+	));
+	
+	$donnees = array();
+	
+	foreach( $satisfactions as $satisfaction){
+		$donnees[] = array(
+			'id' => $satisfaction->IdtSatisfaction, 
+			'nom' => $satisfaction->Nom, 
+			'denvoi' => $satisfaction->DateEnvoi,
+			'drecu' => $satisfaction->DateRecu
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 	
 });
 
@@ -452,6 +580,26 @@ $app->get('/api/satisfactions', function() use ($app) {
 **
 *************************************/
 $app->get('/api/reponses', function() use ($app) {
+	
+	$phql = "SELECT Idt, Question, Reponse, Categorie, Type, IdtSatisfaction 
+			FROM tabreponse";
+	$reponses = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $reponses as $reponse){
+		$donnees[] = array(
+			'id' => $reponse->Idt, 
+			'question' => $reponse->Question, 
+			'reponse' => $reponse->Reponse,
+			'categorie' => $reponse->Categorie,
+			'type' => $reponse->Type
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
+	
+});
 	
 });
 

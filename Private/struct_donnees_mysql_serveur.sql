@@ -217,11 +217,59 @@ CREATE TABLE IF NOT EXISTS tabproduction (
     PRIMARY KEY (IdtElement)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
 
-CREATE TABLE IF NOT EXISTS `tabsynchronisation` (
-  `Idt` int(11) NOT NULL AUTO_INCREMENT,
-  `Commercial` varchar(50) COLLATE utf8_bin NOT NULL,
+CREATE TABLE IF NOT EXISTS `tabevenement` (
+  `IdtEvent` int(11) NOT NULL AUTO_INCREMENT,
+  `DateDeb` datetime DEFAULT NULL,
+  `DateFin` datetime DEFAULT NULL,
+  `Recurrent` tinyint(1) NOT NULL DEFAULT '0',
+  `Frequence` int(11) NOT NULL,
+  `Titre` varchar(50) COLLATE utf8_bin NOT NULL,
+  `Emplacement` varchar(50) COLLATE utf8_bin DEFAULT NULL,
+  `Commentaire` text COLLATE utf8_bin,
+  `Disponibilite` varchar(25) COLLATE utf8_bin NOT NULL,
+  `EstPrive` tinyint(1) NOT NULL DEFAULT '0',
+  `DateModif` datetime DEFAULT NULL,
+  `BitModif` tinyint(1) NOT NULL DEFAULT '0',
+  `BitSup` tinyint(1) NOT NULL DEFAULT '0',
+  `IdtCompte` int(11) NOT NULL,
+  PRIMARY KEY (`IdtEvent`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tabparametre` (
+  `IdtParam` int(11) NOT NULL AUTO_INCREMENT,
+  `Nom` varchar(25) COLLATE utf8_bin NOT NULL,
   `Type` varchar(10) COLLATE utf8_bin NOT NULL,
-  `IdtAndroid` int(11) NOT NULL,
-  `IdtServeur` int(11) NOT NULL,
+  `Libelle` varchar(50) COLLATE utf8_bin NOT NULL,
+  `Valeur` varchar(25) COLLATE utf8_bin NOT NULL,
+  `IdtCompte` int(11) NOT NULL,
+  PRIMARY KEY (`IdtParam`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tabobjectif` (
+  `IdtObjectif` int(11) NOT NULL AUTO_INCREMENT,
+  `Annee` varchar(5) COLLATE utf8_bin NOT NULL,
+  `Type` varchar(10) COLLATE utf8_bin NOT NULL,
+  `Libelle` varchar(50) COLLATE utf8_bin NOT NULL,
+  `Valeur` varchar(25) COLLATE utf8_bin NOT NULL,
+  `IdtCompte` int(11) NOT NULL,
+  PRIMARY KEY (`IdtOjectif`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tabreponse` (
+  `Idt` int(11) NOT NULL AUTO_INCREMENT,
+  `Question` varchar(255) COLLATE utf8_bin NOT NULL,
+  `Reponse` text COLLATE utf8_bin NOT NULL,
+  `Categorie` varchar(25) COLLATE utf8_bin NOT NULL,
+  `Type` varchar(10) COLLATE utf8_bin NOT NULL,
+  `IdtSatisfaction` int(11) NOT NULL,
   PRIMARY KEY (`Idt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tabsatisfaction` (
+  `IdtSatisfaction` int(11) NOT NULL AUTO_INCREMENT,
+  `Nom` varchar(50) COLLATE utf8_bin NOT NULL,
+  `DateEnvoi` datetime DEFAULT NULL,
+  `DateRecu` datetime DEFAULT NULL,
+  `IdtSociete` int(11) NOT NULL,
+  PRIMARY KEY (`IdtSatisfaction`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=1 ;

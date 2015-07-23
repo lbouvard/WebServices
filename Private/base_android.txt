@@ -110,7 +110,7 @@ Nom  		TEXT
 Type  		TEXT
 Libelle  	TEXT
 Valeur  	TEXT
-BitAjout 	INTEGER
+--BitAjout 	INTEGER
 BitModif 	INTEGER
 IdtCompte 	INTEGER
 _______________________________________________________
@@ -133,7 +133,7 @@ ATraiter		INTEGER
 ______________________________________________
 Reponse
 ------------------------------------------------------
-IdtQuestion 	INTEGER
+Idt			 	INTEGER
 Question  		TEXT
 Reponse  		TEXT
 Categorie  		TEXT
