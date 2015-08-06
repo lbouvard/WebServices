@@ -104,22 +104,25 @@ $app->get('/api/societes', function() use ($app) {
 	
 	$donnees = array();
 	
-	foreach( $societes as $societe){
-		$donnees[] = array(
-				'id' => $societe->IdtSociete, 
-				'nom' => $societe->NomSociete, 
-				'adresse1' => $societe->Adresse1,
-				'adresse2' => $societe->Adresse2,
-				'codePostal' => $societe->CodePostal,
-				'ville' => $societe->Ville,
-				'pays' => $societe->Pays,
-				'type' => $societe->TypeSociete,
-				'commentaire' => $societe->Commentaire,
-				'auteur' => $societe->Auteur
-				);
+	if( $societes != false ){
+		
+		foreach( $societes as $societe){
+			$donnees[] = array(
+					'id' => $societe->IdtSociete, 
+					'nom' => $societe->NomSociete, 
+					'adresse1' => $societe->Adresse1,
+					'adresse2' => $societe->Adresse2,
+					'codePostal' => $societe->CodePostal,
+					'ville' => $societe->Ville,
+					'pays' => $societe->Pays,
+					'type' => $societe->TypeSociete,
+					'commentaire' => $societe->Commentaire,
+					'auteur' => $societe->Auteur
+					);
+		}
+		
+		echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 	}
-	
-	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 	
 	/*switch (json_last_error()) {
         case JSON_ERROR_NONE:
@@ -156,6 +159,23 @@ $app->post('/api/societes/ajt', function() use ($app) {
 	//Pour chaque client/prospect
 	foreach( $societes as $societe ){
 		
+		//on verifie que le client n'existe pas déjà
+		$phql = "SELECT NomSociete nom, Adresse1 adresse1, Adresse2 adresse2, CodePostal codePostal, Ville ville, Pays pays, 
+					TypeSociete type, Commentaire commentaire, Auteur auteur FROM tabsociete 
+				 WHERE NomSociete = :nom: AND BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M' AND TypeSociete != 'F'";
+		$client = $app->modelsManager->executeQuery($phql, array(
+			'nom' => $societe->nom
+		))->getFirst();
+		
+		if( $client != false ){
+			$message = sprintf("Le client de nom %s existe déjà. Données : %s|%s|%s|%s|%s|%s|%s|%s", $client->nom,
+									$client->adresse1, $client->adresse2, $client->codePostal, $client->ville, 
+									$client->pays, $client->type, $client->commentaire, $client->auteur);
+			error_log($message, 0);
+			continue;
+		}
+		
+		//insertion en base
 		$phql = "INSERT INTO tabsociete 
 				(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSup)
 				VALUES
@@ -189,19 +209,19 @@ $app->post('/api/societes/ajt', function() use ($app) {
 			$erreur = true;
 			
 			//on sort de la boucle
-			break;
+			//break;
 		}
 	}
 			
 	//Réponse HTTP
 	$reponse = new Phalcon\Http\Response();
 	
-	if( $erreur ){
+	/*if( $erreur ){
 		$reponse->setStatusCode(460, "Echec insertion.");
 	}
-	else{
-		$reponse->setStatusCode(201, "Ajout réussi.");
-	}
+	else{*/
+		$reponse->setStatusCode(200, "Ajout réussi.");
+	//}
 
 	$reponse->setJsonContent($etats);
 	
@@ -218,11 +238,16 @@ $app->post('/api/societes/maj', function() use ($app) {
 		
 		if( !$societe->ASupprimer ){
 			//on sauvegarde les valeurs en cours
-			$phql = "SELECT NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur FROM tabsociete WHERE IdtSociete = ".$societe->id;
-			$sauvegarde = $app->modelsManager->executeQuery($phql);
+			$phql = "SELECT NomSociete nom, Adresse1 adresse1, Adresse2 adresse2, CodePostal codePostal, Ville ville, 
+					Pays pays, TypeSociete type, Commentaire commentaire, Auteur auteur FROM tabsociete WHERE IdtSociete = :id:";
+			$sauvegarde = $app->modelsManager->executeQuery($phql, array(
+				'id' => $societe->id
+			))->getFirst();
+			
+			error_log(var_export($sauvegarde, true), 0);
 			
 			$phql = "INSERT INTO tabsociete 
-			(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSupr)
+			(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSup)
 			VALUES
 			(:nom:, :adresse1:, :adresse2:, :codePostal:, :ville:, :pays:, :type:, :commentaire:, :auteur:, NOW(), 1, 0)";
 					
@@ -250,20 +275,21 @@ $app->post('/api/societes/maj', function() use ($app) {
 		}
 		else{
 			//MAJ
-			$phql = "UPDATE tabsociete SET Nom = :nom:, Adresse1 = :adresse1:, Adresse2 = :adresse2:, CodePostal = :codePostal:, 
-									Ville = :ville:, Pays = :pays:, TypeSociete = :type:, Commentaire = :commentaire:
-				WHERE IdtSociete = :id:";
+			$phql = "UPDATE tabsociete SET NomSociete = :nom:, Adresse1 = :adresse1:, Adresse2 = :adresse2:, CodePostal = :codePostal:, 
+									Ville = :ville:, Pays = :pays:, TypeSociete = :type:, Commentaire = :commentaire:, Auteur = :auteur: 
+					 WHERE IdtSociete = :id:";
 				
 			$etat = $app->modelsManager->executeQuery($phql, array(
-				'nom' => $sauvegarde->nom,
-				'adresse1' => $sauvegarde->adresse1,
-				'adresse2' => $sauvegarde->adresse2,
-				'codePostal' => $sauvegarde->codePostal,
-				'ville' => $sauvegarde->ville,
-				'pays' => $sauvegarde->pays,
-				'type' => $sauvegarde->type,
-				'commentaire' => $sauvegarde->commentaire,
-				'auteur' => $sauvegarde->auteur
+				'nom' => $societe->nom,
+				'adresse1' => $societe->adresse1,
+				'adresse2' => $societe->adresse2,
+				'codePostal' => $societe->codePostal,
+				'ville' => $societe->ville,
+				'pays' => $societe->pays,
+				'type' => $societe->type,
+				'commentaire' => $societe->commentaire,
+				'auteur' => $societe->auteur,
+				'id' => $societe->id
 			));
 		}
 	}
@@ -598,8 +624,6 @@ $app->get('/api/reponses', function() use ($app) {
 	}
 	
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
-	
-});
 	
 });
 
