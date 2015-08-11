@@ -6,7 +6,7 @@ use Phalcon\Mvc\Model,
 	Phalcon\Mvc\Model\Validator\Uniqueness;
 	
 class tabcontact extends Model
-{
+{	
 	public function validation(){
 		/*
 		//type client ou prospect

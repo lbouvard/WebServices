@@ -99,7 +99,8 @@ $app->get('/api/societes', function() use ($app) {
 	
 	$phql = "SELECT IdtSociete, NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur 
 			FROM tabsociete 
-			WHERE BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M' AND TypeSociete != 'F'";
+			WHERE BitModif = 0 AND BitSup = 0 AND TypeSociete != 'M' AND TypeSociete != 'F' 
+			ORDER BY IdtSociete";
 	$societes = $app->modelsManager->executeQuery($phql);
 	
 	$donnees = array();
@@ -302,12 +303,15 @@ $app->post('/api/societes/maj', function() use ($app) {
 *************************************/
 $app->get('/api/contacts', function() use ($app) {
 	
-	$phql = " SELECT con.IdtContact, con.NomContact, con.PrenomContact, con.IntitulePoste, 
+	$phql = "SELECT con.IdtContact, con.NomContact, con.PrenomContact, con.IntitulePoste, 
 			con.TelFixe, con.TelMobile, con.Fax, con.Email, con.Adresse, con.CodePostal, con.Ville, con.Pays, 
 			con.Commentaire, con.Auteur, con.DateModif, con.BitModif, con.BitSup, con.Societe_id, con.Utilisateur_id
 			FROM tabcontact con
 			INNER JOIN tabsociete soc ON con.Societe_id = soc.IdtSociete
-			WHERE con.BitModif = 0 AND con.BitSup = 0 AND soc.TypeSociete != 'F' AND soc.TypeSociete != 'M'";
+			WHERE con.BitModif = 0 AND con.BitSup = 0 AND soc.TypeSociete != 'F' 
+			ORDER BY IdtContact";
+			
+			/* AND soc.TypeSociete != 'M' */
 			
 	$contacts = $app->modelsManager->executeQuery($phql);
 	
@@ -324,12 +328,12 @@ $app->get('/api/contacts', function() use ($app) {
 				'fax' => $contact->Fax,
 				'email' => $contact->Email,
 				'adresse' => $contact->Adresse,
-				'codePostal' => $contact->CodePostal,
+				'code_postal' => $contact->CodePostal,
 				'ville' => $contact->Ville,
 				'pays' => $contact->Pays,
 				'commentaire' => $contact->Commentaire,
 				'auteur' => $contact->Auteur,
-				'idt_societe' => $contact->Societe_id
+				'id_societe' => $contact->Societe_id
 				);
 	}
 	
@@ -341,40 +345,82 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 	$contacts = $app->request->getJsonRawBody();
 	$etats = array();
 	$erreur = false;
-	
+
 	//Pour chaque contact
 	foreach( $contacts as $contact){
 		
+				//on verifie que le client n'existe pas déjà
+		$phql = "SELECT con.IdtContact, con.NomContact, con.PrenomContact, con.IntitulePoste, 
+			con.TelFixe, con.TelMobile, con.Fax, con.Email, con.Adresse, con.CodePostal, con.Ville, con.Pays, 
+			con.Commentaire, con.Auteur, con.DateModif, con.BitModif, con.BitSup, con.Societe_id, con.Utilisateur_id
+			FROM tabcontact con
+			INNER JOIN tabsociete soc ON con.Societe_id = soc.IdtSociete
+			WHERE con.NomContact = :nom: AND con.PrenomContact = :prenom: AND con.BitModif = 0 AND con.BitSup = 0 AND soc.TypeSociete != 'F' AND soc.TypeSociete != 'M'";
+			
+		$existe = $app->modelsManager->executeQuery($phql, array(
+			'nom' => $contact->nom,
+			'prenom' => $contact->prenom
+		))->getFirst();
+		
+		if( $existe != false ){
+			$message = sprintf("Le contact (nom %s, prénom %s) existe déjà. Données : %s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s", $existe->NomContact, $existe->PrenomContact,
+									$existe->IntitulePoste, $existe->Adresse, $existe->CodePostal, $existe->Ville, 
+									$existe->Pays, $existe->Commentaire, $existe->Auteur, $existe->TelFixe, $existe->TelMobile, $existe->Fax, $existe->Email);
+			error_log($message, 0);
+			continue;
+		}
+		
+		//on crée déjà un compte utilisateur
+		//salt
+		$salt = md5(uniqid(null, true));
+		
+		$phql = "INSERT INTO tabutilisateur 
+				(Nom, MotDePasse, Email, Salt, DateModif, BitModif, BitSup, Actif)
+				VALUES 
+				(:nom:, :mdp:, :mail:, :salt:, NULL, 0, 0, 0)";
+		$utilisateur = $app->modelsManager->executeQuery($phql, array(
+			'nom' => $contact->nom.".".$contact->prenom,
+			'mdp' => '-',
+			'mail' => $contact->email,
+			'salt' => $salt
+		));
+		
+		if( $utilisateur->success() == true ){
+			$user_id = $utilisateur->getModel()->IdtUtilisateur;
+		}
+
+		//on ajoute le contact
 		$phql = "INSERT INTO tabcontact 
 				(NomContact, PrenomContact, IntitulePoste, TelFixe, TelMobile, Fax, Email, Adresse, CodePostal, Ville, Pays, Commentaire, Auteur, DateModif, BitModif, BitSup, Societe_id, Utilisateur_id)
 				VALUES
-				(:nom:, :prenom:, :poste:, :fixe:, :mobile:, :fax:, :mail:, :adresse:, :codePostal:, :ville:, :pays:, :commentaire:, :auteur:, NULL, 0, 0, :societe:, -1)";
+				(:nom:, :prenom:, :poste:, :fixe:, :mobile:, :fax:, :mail:, :adresse:, :codePostal:, :ville:, :pays:, :commentaire:, :auteur:, NULL, 0, 0, :societeid:, :userid:)";
 				
 		//mise en place des paramètres
 		$etat = $app->modelsManager->executeQuery($phql, array(
 			'nom' => $contact->nom,
 			'prenom' => $contact->prenom,
 			'poste' => $contact->poste,
-			'fixe' => $contact->fixe,
-			'mobile' => $contact->mobile,
+			'fixe' => $contact->tel_fixe,
+			'mobile' => $contact->tel_mobile,
 			'fax' => $contact->fax,
-			'mail' => $contact->mail,
+			'mail' => $contact->email,
 			'adresse' => $contact->adresse,
-			'codePostal' => $contact->codePostal,
+			'codePostal' => $contact->code_postal,
 			'ville' => $contact->ville,
 			'pays' => $contact->pays,
 			'commentaire' => $contact->commentaire,
 			'auteur' => $contact->auteur,
-			'societe' => $contact->societe,
+			'societeid' => $contact->id_societe,
+			'userid' => $user_id
 		));
 		
 		if( $etat->success() == true ){
-			$etats[] = array('Etat' => 'OK', 'Id' => $etat->getModel()->IdtContact);
+			$etats[] = array('Etat' => 'OK', 'NewId' => $etat->getModel()->IdtContact, 'OldId' => $contact->id );
 		}
 		else{
 			$erreurs = array();
 				
-			foreach( $stats->getMessages() as $message){
+			foreach( $etats->getMessages() as $message){
 				 $erreurs[] = $message->getMessage();
 			}
 			
@@ -383,18 +429,18 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 			$erreur = true;
 			
 			//on sort de la boucle
-			break;
+			//break;
 		}		
 	}
 	
 	$reponse = new Phalcon\Http\Response();
 	
-	if( $erreur ){
+	/*if( $erreur ){
 		$reponse->setStatusCode(460, "Echec insertion.");
 	}
-	else{
+	else{*/
 		$reponse->setStatusCode(201, "Ajout réussi.");
-	}
+	/*}*/
 	
 	$reponse->setJsonContent($etats);
 	
@@ -403,6 +449,123 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 
 $app->post('/api/contacts/maj', function() use ($app) {
 	
+	$contacts = $app->request->getJsonRawBody();
+
+	foreach($contacts as $contact){
+		
+		if( !$contact->ASupprimer ){
+			//on sauvegarde les valeurs en cours
+			$phql = "SELECT NomContact, PrenomContact, IntitulePoste, 
+						TelFixe, TelMobile, Fax, Email, Adresse, CodePostal, Ville, Pays, 
+						Commentaire, Auteur, Societe_id, Utilisateur_id
+					FROM tabcontact WHERE IdtContact = :id:";
+					
+			$sauvegarde = $app->modelsManager->executeQuery($phql, array(
+				'id' => $contact->id
+			))->getFirst();
+			
+			$phql = "INSERT INTO tabcontact 
+			(NomContact, PrenomContact, IntitulePoste, TelFixe, TelMobile, Fax, Email, Adresse, CodePostal, Ville, Pays, Commentaire, Auteur, DateModif, BitModif, BitSup, Societe_id, Utilisateur_id)
+			VALUES
+			(:nom:, :prenom:, :intitule:, :fixe:, :mobile:, :fax:, :mail:, :adresse:, :code_postal:, :ville:, :pays:, :commentaire:, :auteur:, NOW(), 1, 0, :societe_id:, :utilisateur_id:)";
+			
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'nom' => $sauvegarde->NomContact,
+				'prenom' => $sauvegarde->PrenomContact,
+				'intitule' => $sauvegarde->IntitulePoste,
+				'fixe' => $sauvegarde->TelFixe,
+				'mobile' => $sauvegarde->TelMobile,
+				'fax' => $sauvegarde->Fax,
+				'mail' => $sauvegarde->Email,
+				'adresse' => $sauvegarde->Adresse,
+				'code_postal' => $sauvegarde->CodePostal,
+				'ville' => $sauvegarde->Ville,
+				'pays' => $sauvegarde->Pays,
+				'commentaire' => $sauvegarde->Commentaire,
+				'auteur' => $sauvegarde->Auteur,
+				'societe_id'=> $sauvegarde->Societe_id,
+				'utilisateur_id' => $sauvegarde->Utilisateur_id
+			));
+
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}			
+		}
+		
+		//SUPPRESION
+		if( $contact->ASupprimer ){
+			$phql = "UPDATE tabcontact SET BitSup = 1, DateModif = NOW() WHERE IdtContact = :id:";	
+
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'id' => $contact->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}			
+
+			//on désactive le compte utilisateur lié
+			$phql = "SELECT Utilisateur_id FROM tabcontact WHERE IdtContact = :id:";
+			
+			$id_user = $app->modelsManager->executeQuery($phql, array(
+				'id' => $contact->id
+			))->getFirst();
+			
+			if( $id_user != false ){
+			
+				$phql = "UPDATE tabutilisateur SET Actif = 0 WHERE IdtUtilisateur = :id:";
+				$etat = $app->modelsManager->executeQuery($phql, array(
+					'id' => $id_user->Utilisateur_id
+				));
+			
+				if( $etat->success() != true ){
+					foreach( $etat->getMessages() as $message){
+						 error_log($message->getMessage(), 0);
+					}	
+				}
+			}
+			else{
+				foreach( $etat->getMessages() as $message){
+					error_log($message->getMessage(), 0);
+				}
+			}
+			
+		}
+		else{
+			//MAJ
+			$phql = "UPDATE tabcontact SET NomContact = :nom:, PrenomContact = :prenom:, IntitulePoste = :intitule:, TelFixe = :fixe:, TelMobile = :mobile:, 
+							Fax = :fax:, Email = :mail:, Adresse = :adresse:, CodePostal = :codePostal:, Ville = :ville:, Pays = :pays:, Commentaire = :commentaire:, 
+							Auteur = :auteur: 
+							WHERE IdtContact = :id:";
+			
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'nom' => $contact->nom,
+				'prenom' => $contact->prenom,
+				'intitule' => $contact->poste,
+				'fixe' => $contact->tel_fixe,
+				'mobile' => $contact->tel_mobile,
+				'fax' => $contact->fax,
+				'mail' => $contact->email,
+				'adresse' => $contact->adresse,
+				'codePostal' => $contact->code_postal,
+				'ville' => $contact->ville,
+				'pays' => $contact->pays,
+				'commentaire' => $contact->commentaire,
+				'auteur' => $contact->auteur,
+				'id' => $contact->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}
+		}
+	}	
 });
 
 /************************************
@@ -473,7 +636,7 @@ $app->post('/api/articles/ajt', function() use ($app) {
 	
 });
 
-$app->post('/api/articles/maj', function() use ($app) {
+$app->get('/api/articles/maj', function() use ($app) {
 	
 });
 
