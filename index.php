@@ -34,7 +34,6 @@ $app = new \Phalcon\Mvc\Micro($base);
 **	UTILISATEURS
 **
 *************************************/
-//Recupération depuis le serveur
 $app->get('/api/utilisateurs', function() use ($app) {
 	
 	$phql = "SELECT user.IdtUtilisateur, user.Nom, user.MotDePasse, user.Email, user.Salt 
@@ -64,7 +63,6 @@ $app->get('/api/utilisateurs', function() use ($app) {
 **	PRODUITS
 **
 *************************************/
-//Recupération depuis le serveur
 $app->get('/api/produits', function() use ($app) {
 	
 	$phql = "SELECT prod.IdtProduit, prod.NomProduit, prod.DescriptionProduit, prod.CategorieProduit, prod.CodeProduit, prod.PrixProduit 
@@ -94,7 +92,6 @@ $app->get('/api/produits', function() use ($app) {
 ** 	CLIENTS / PROSPECTS
 **
 *************************************/
-//Recupération depuis le serveur
 $app->get('/api/societes', function() use ($app) {
 	
 	$phql = "SELECT IdtSociete, NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur 
@@ -201,7 +198,7 @@ $app->post('/api/societes/ajt', function() use ($app) {
 		else{
 			$erreurs = array();
 			 
-			foreach( $stats->getMessages() as $message){
+			foreach( $etat->getMessages() as $message){
 				 $erreurs[] = $message->getMessage();
 			}
 			
@@ -245,8 +242,6 @@ $app->post('/api/societes/maj', function() use ($app) {
 				'id' => $societe->id
 			))->getFirst();
 			
-			error_log(var_export($sauvegarde, true), 0);
-			
 			$phql = "INSERT INTO tabsociete 
 			(NomSociete, Adresse1, Adresse2, CodePostal, Ville, Pays, TypeSociete, Commentaire, Auteur, DateModif, BitModif, BitSup)
 			VALUES
@@ -271,7 +266,7 @@ $app->post('/api/societes/maj', function() use ($app) {
 						WHERE IdtSociete = :id:";	
 
 			$etat = $app->modelsManager->executeQuery($phql, array(
-			'id' => $societe->id
+				'id' => $societe->id
 			));				
 		}
 		else{
@@ -378,6 +373,7 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 				(Nom, MotDePasse, Email, Salt, DateModif, BitModif, BitSup, Actif)
 				VALUES 
 				(:nom:, :mdp:, :mail:, :salt:, NULL, 0, 0, 0)";
+				
 		$utilisateur = $app->modelsManager->executeQuery($phql, array(
 			'nom' => $contact->nom.".".$contact->prenom,
 			'mdp' => '-',
@@ -420,7 +416,7 @@ $app->post('/api/contacts/ajt', function() use ($app) {
 		else{
 			$erreurs = array();
 				
-			foreach( $etats->getMessages() as $message){
+			foreach( $etat->getMessages() as $message){
 				 $erreurs[] = $message->getMessage();
 			}
 			
@@ -528,12 +524,7 @@ $app->post('/api/contacts/maj', function() use ($app) {
 					}	
 				}
 			}
-			else{
-				foreach( $etat->getMessages() as $message){
-					error_log($message->getMessage(), 0);
-				}
-			}
-			
+
 		}
 		else{
 			//MAJ
@@ -573,10 +564,9 @@ $app->post('/api/contacts/maj', function() use ($app) {
 ** 	     BONS
 **
 *************************************/
-//les bons
 $app->get('/api/bons', function() use ($app) {
 
-	$phql = "SELECT IdtCommande, DateCommande, EtatCommande, Commentaire, DateChg, Auteur, Contact_id, Societe_id
+	$phql = "SELECT IdtCommande, DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, DateChg, BitChg, Contact_id, Societe_id
 			FROM tabcommande 
 			WHERE BitSup = 0";
 	$bons = $app->modelsManager->executeQuery($phql);
@@ -586,23 +576,157 @@ $app->get('/api/bons', function() use ($app) {
 	foreach( $bons as $bon){
 		$donnees[] = array(
 			'id' => $bon->IdtCommande, 
-			'date' => $bon->DateCommande, 
-			'etat' => $bon->EtatCommande,
+			'date_commande' => $bon->DateCommande, 
+			'etat_commande' => $bon->EtatCommande,
 			'commentaire' => $bon->Commentaire,
-			'datechg' => $bon->DateChg,
+			'type' => $bon->Type,
+			'suivi' => $bon->Suivi,
+			'transporteur' => $bon->Transporteur,
+			'date_changement' => $bon->DateChg,
 			'auteur' => $bon->Auteur,
-			'contact_id' => $bon->Contact_id,
-			'societe_id' => $bon->Societe_id
+			'client_id' => $bon->Contact_id,
+			'commercial_id' => $bon->Societe_id,
+			'aChange' => $bon->BitChg
 		);
 	}
 	
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 	
 });
-//les articles d'un bon
+
+$app->post('/api/bons/ajt', function() use ($app) {
+	
+	$bons = $app->request->getJsonRawBody();
+	$etats = array();
+	$erreur = false;
+	
+	//Pour chaque bon ou devis
+	foreach( $bons as $bon ){
+			
+		//insertion en base
+		$phql = "INSERT INTO tabcommande 
+				(DateCommande, EtatCommande, Commentaire, Type, Auteur, DateChg, BitChg, BitSup, Contact_id, Societe_id) 
+				VALUES
+				(:date_commande:, :etat:, :commentaire:, :type:, :auteur:, NULL, 0, 0, :contact_id:, :societe_id:)";
+		
+		$etat = $app->modelsManager->executeQuery($phql, array(
+			'date_commande' => $bon->date_commande,
+			'etat' => $bon->etat_commande,
+			'commentaire' => $bon->commentaire,
+			'type' => $bon->type,
+			'auteur' => $bon->auteur,
+			'contact_id' => $bon->client_id,
+			'societe_id' => $bon->commercial_id
+		));
+		
+		if( $etat->success() == true ){
+			$etats[] = array('Etat' => 'OK', 'NewId' => $etat->getModel()->IdtCommande, 'OldId' => $bon->id );
+		}
+		else{
+			$erreurs[] = array();
+			
+			foreach( $etat->getMessages() as $message ){
+				$erreurs[] = $message->getMessage();
+			}
+			
+			$etats[] = array('Etat' => 'KO', 'Id' => -1, 'Erreur' => $erreurs);
+			
+			$erreur = true;
+			
+		}
+	}
+	
+	$reponse = new Phalcon\Http\Response();
+	$reponse->setStatusCode(201, "Ajout réussi.");
+	
+	$reponse->setJsonContent($etats);
+	
+	return $reponse;
+	
+});
+
+$app->post('/api/bons/maj', function() use ($app) {
+	
+	$bons = $app->request->getJsonRawBody();
+	
+	foreach($bons as $bon){
+		
+		if( !$bon->ASupprimer ){
+			//on sauvegarde les valeurs en cours
+			$phql = "SELECT DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, Contact_id, Societe_id 
+					FROM tabcommande WHERE IdtCommande = :id:";
+			$sauvegarde = $app->modelsManager->executeQuery($phql, array(
+				'id' => $bon->id
+			))->getFirst();
+			
+			error_log(var_export($sauvegarde, true));
+			
+			$phql = "INSERT INTO tabcommande 
+				(DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, DateChg, BitChg, BitSup, Contact_id, Societe_id) 
+				VALUES
+				(:date_commande:, :etat:, :commentaire:, :type:, :suivi:, :transporteur:, :auteur:, NOW(), 1, 0, :contact_id:, :societe_id:)";
+				
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'date_commande' => $sauvegarde->DateCommande,
+				'etat' => $sauvegarde->EtatCommande,
+				'commentaire' => $sauvegarde->Commentaire,
+				'type' => $sauvegarde->Type,
+				'suivi' => $sauvegarde->Suivi,
+				'transporteur' => $sauvegarde->Transporteur,
+				'auteur' => $sauvegarde->Auteur,
+				'contact_id' => $sauvegarde->Contact_id,
+				'societe_id' => $sauvegarde->Societe_id
+			));
+		}
+		
+		//Suppression
+		if( $bon->ASupprimer ){
+			$phql = "UPDATE tabcommande SET BitSup = 1, DateChg = NOW()
+						WHERE IdtCommande = :id:";
+						
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'id' => $bon->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}	
+		}
+		else{
+			//maj
+			$phql = "UPDATE tabcommande SET EtatCommande = :etat:, Commentaire = :commentaire:, Type = :type:, Contact_id = :contact_id:, Suivi = :suivi:, Transporteur = :transporteur: 
+					WHERE IdtCommande = :id:";
+					
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'etat' => $bon->etat_commande,
+				'commentaire' => $bon->commentaire,
+				'type' => $bon->type,
+				'contact_id' => $bon->commercial_id,
+				'suivi' => $bon->suivi,
+				'transporteur' => $bon->transporteur,
+				'id' => $bon->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}
+			
+		}
+	}
+});
+
+/************************************
+**
+** 	     LIGNE ARTICLE
+**
+*************************************/
 $app->get('/api/articles', function() use ($app) {
 	
-	$phql = "SELECT Idt, CodeProduit, NomProduit, DescriptionProduit, Quantite, PrixProduit, PrixTotal, commande_id 
+	$phql = "SELECT Idt, CodeProduit, NomProduit, DescriptionProduit, Quantite, PrixProduit, Remise, PrixTotal, commande_id 
 			FROM tabcommandeproduits";
 	$articles = $app->modelsManager->executeQuery($phql);
 	
@@ -615,29 +739,108 @@ $app->get('/api/articles', function() use ($app) {
 			'nom' => $article->NomProduit,
 			'description' => $article->DescriptionProduit,
 			'quantite' => $article->Quantite,
-			'prix' => $article->PrixProduit,
-			'prix_total' => $article->PrixTotal,
-			'commande_id' => $article->commande_id
+			'prixUnitaire' => $article->PrixProduit,
+			'remise' => $article->Remise,
+			'id_bon' => $article->commande_id
 		);
 	}
 	
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
 
-$app->post('/api/bons/ajt', function() use ($app) {
-	
-});
-
-$app->post('/api/bons/maj', function() use ($app) {
-	
-});
-
 $app->post('/api/articles/ajt', function() use ($app) {
+		
+	$lignes = $app->request->getJsonRawBody();
+	$etats = array();
+	$erreur = false;
 	
+	//Pour chaque bon ou devis
+	foreach( $lignes as $ligne ){
+			
+		//insertion en base
+		$phql = "INSERT INTO tabcommandeproduits 
+					(CodeProduit, NomProduit, DescriptionProduit, Quantite, PrixProduit, Remise, PrixTotal, commande_id) 
+				VALUES
+					(:code:, :nom:, :description:, :quantite:, :prix:, :remise:, :total:, :commande_id:)";
+		
+		$etat = $app->modelsManager->executeQuery($phql, array(
+			'code' => $ligne->code,
+			'nom' => $ligne->nom,
+			'description' => $ligne->description,
+			'quantite' => $ligne->quantite,
+			'prix' => $ligne->prixUnitaire,
+			'remise' => $ligne->remise,
+			'total' => $ligne->prixTotal,
+			'commande_id' => $ligne->id_bon
+		));
+		
+		if( $etat->success() == true ){
+			$etats[] = array('Etat' => 'OK', 'NewId' => $etat->getModel()->Idt, 'OldId' => $ligne->id );
+		}
+		else{
+			$erreurs[] = array();
+			
+			foreach( $etat->getMessages() as $message ){
+				$erreurs[] = $message->getMessage();
+			}
+			
+			$etats[] = array('Etat' => 'KO', 'Id' => -1, 'Erreur' => $erreurs);
+			
+			$erreur = true;
+			
+		}
+	}
+	
+	$reponse = new Phalcon\Http\Response();
+	$reponse->setStatusCode(201, "Ajout réussi.");
+	
+	$reponse->setJsonContent($etats);
+	
+	return $reponse;
 });
 
-$app->get('/api/articles/maj', function() use ($app) {
+$app->post('/api/articles/maj', function() use ($app) {
 	
+	$lignes = $app->request->getJsonRawBody();
+	
+	foreach($lignes as $ligne){
+		
+		//suppression
+		if( $ligne->ASupprimer ){
+			
+			$phql = "DELETE FROM tabcommandeproduits WHERE Idt = :id:";
+						
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'id' => $ligne->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}	
+		}
+		else{
+			//maj
+			$phql = "UPDATE tabcommandeproduits SET Quantite = :quantite:, PrixProduit = :prix:, Remise = :remise:, PrixTotal = :total: 
+					WHERE Idt = :id:";
+					
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'quantite' => $ligne->quantite,
+				'prix' => $ligne->prixUnitaire,
+				'remise' => $ligne->remise,
+				'total' => $ligne->prixTotal,
+				'id' => $ligne->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}
+			
+		}
+	}
 });
 
 /************************************
@@ -649,7 +852,7 @@ $app->get('/api/evenements/{id:[0-9]+}', function($id) use ($app) {
 	
 	$phql = "SELECT IdtEvent, DateDeb, DateFin, Recurrent, Frequence, Titre, Emplacement, Commentaire, Disponibilite, EstPrive, IdtCompte 
 			FROM tabevenement 
-			WHERE BitSup = 0 AND BitModif = 0 AND IdtCompte = :id:";
+			WHERE IdtCompte = :id:";
 			
 	$events = $app->modelsManager->executeQuery($phql, array(
 		'id' => $id
@@ -660,8 +863,8 @@ $app->get('/api/evenements/{id:[0-9]+}', function($id) use ($app) {
 	foreach( $events as $event){
 		$donnees[] = array(
 			'id' => $event->IdtEvent, 
-			'ddeb' => $event->DateDeb, 
-			'dfin' => $event->DateFin,
+			'date_debut' => $event->DateDeb, 
+			'date_fin' => $event->DateFin,
 			'recurrent' => $event->Recurrent,
 			'frequence' => $event->Frequence,
 			'titre' => $event->Titre,
@@ -676,14 +879,120 @@ $app->get('/api/evenements/{id:[0-9]+}', function($id) use ($app) {
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 });
 
+$app->post('/api/evenements/ajt', function() use ($app) {
+	
+	$events = $app->request->getJsonRawBody();
+	$etats = array();
+	$erreur = false;
+	
+	//Pour chaque bon ou devis
+	foreach( $events as $event ){
+			
+		error_log(var_export($event, true), 0);
+		
+		//insertion en base
+		$phql = "INSERT INTO tabevenement
+					(DateDeb, DateFin, Recurrent, Frequence, Titre, Emplacement, Commentaire, Disponibilite, EstPrive, IdtCompte) 
+				VALUES
+					(:datedeb:, :datefin:, :recurrent:, :frequence:, :titre:, :emplacement:, :commentaire:, :dispo:, :prive:, :compte_id:)";
+		
+		$etat = $app->modelsManager->executeQuery($phql, array(
+			'datedeb' => $event->date_debut,
+			'datefin' => $event->date_fin,
+			'recurrent' => $event->recurrent,
+			'frequence' => $event->frequence,
+			'titre' => $event->titre,
+			'emplacement' => $event->emplacement,
+			'commentaire' => $event->commentaire,
+			'dispo' => $event->disponibilite,
+			'prive' => $event->est_prive,
+			'compte_id' => $event->compte_id
+		));
+		
+		if( $etat->success() == true ){
+			$etats[] = array('Etat' => 'OK', 'NewId' => $etat->getModel()->IdtEvent, 'OldId' => $event->id );
+		}
+		else{
+			$erreurs[] = array();
+			
+			foreach( $etat->getMessages() as $message ){
+				$erreurs[] = $message->getMessage();
+			}
+			
+			$etats[] = array('Etat' => 'KO', 'Id' => -1, 'Erreur' => $erreurs);
+			
+			$erreur = true;
+			
+		}
+	}
+	
+	$reponse = new Phalcon\Http\Response();
+	$reponse->setStatusCode(201, "Ajout réussi.");
+	
+	$reponse->setJsonContent($etats);
+	
+	return $reponse;
+});
+
+$app->post('/api/evenements/maj', function() use ($app) {
+	
+	$events = $app->request->getJsonRawBody();
+	
+	foreach($events as $event){
+		
+		//suppression
+		if( $event->ASupprimer ){
+			
+			$phql = "DELETE FROM tabevenement WHERE IdtEvent = :id:";
+						
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'id' => $event->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}	
+		}
+		else{
+			//maj
+			$phql = "UPDATE tabevenement SET DateDeb = :datedeb:, DateFin = :datefin:, Recurrent = :recurrent:, Frequence = :frequence:, 
+						Titre = :titre:, Emplacement = :emplacement:, Commentaire = :commentaire:, Disponibilite = :dispo:, 
+						EstPrive = :prive:
+					 WHERE IdtEvent = :id:";
+					
+			$etat = $app->modelsManager->executeQuery($phql, array(
+				'datedeb' => $event->date_debut,
+				'datefin' => $event->date_fin,
+				'recurrent' => $event->recurrent,
+				'frequence' => $event->frequence,
+				'titre' => $event->titre,
+				'emplacement' => $event->emplacement,
+				'commentaire' => $event->commentaire,
+				'dispo' => $event->disponibilite,
+				'prive' => $event->est_prive,
+				'id' => $event->id
+			));
+			
+			if( $etat->success() != true ){
+				foreach( $etat->getMessages() as $message){
+					 error_log($message->getMessage(), 0);
+				}	
+			}
+			
+		}
+	}
+});
+
 /************************************
 **
 ** 	     PARAMETRES
 **
 *************************************/
-$app->get('/api/parametres/{id: [0-9]+}', function($id) use ($app) {
+$app->get('/api/parametres/{id:[0-9]+}', function($id) use ($app) {
 	
-	$phql = "SELECT IdtParam, Nom, Type, Libelle, Valeur 
+	$phql = "SELECT IdtParam, Nom, Type, Libelle, Valeur, IdtCompte 
 			FROM tabparametre 
 			WHERE IdtCompte = :id:";
 	$params = $app->modelsManager->executeQuery($phql, array(
@@ -698,11 +1007,35 @@ $app->get('/api/parametres/{id: [0-9]+}', function($id) use ($app) {
 			'nom' => $param->Nom, 
 			'type' => $param->Type,
 			'libelle' => $param->Libelle,
-			'valeur' => $param->Valeur
+			'valeur' => $param->Valeur,
+			'compte_id' => $param->IdtCompte
 		);
 	}
 	
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
+});
+
+$app->post('/api/parametres/maj', function() use ($app) {
+	
+	$params = $app->request->getJsonRawBody();
+	
+	foreach($params as $param){
+		
+		//maj
+		$phql = "UPDATE tabparametre SET Valeur = :valeur: WHERE IdtParam = :id:";
+				
+		$etat = $app->modelsManager->executeQuery($phql, array(
+			'valeur' => $param->valeur,
+			'id' => $param->id
+		));
+		
+		if( $etat->success() != true ){
+			foreach( $etat->getMessages() as $message){
+				 error_log($message->getMessage(), 0);
+			}	
+		}
+	}
+	
 });
 
 /************************************
@@ -710,9 +1043,9 @@ $app->get('/api/parametres/{id: [0-9]+}', function($id) use ($app) {
 ** 	     OBJECTIFS
 **
 *************************************/
-$app->get('/api/objectifs/{id: [0-9]+}', function($id) use ($app) {
+$app->get('/api/objectifs/{id:[0-9]+}', function($id) use ($app) {
 	
-	$phql = "SELECT IdtObjectif, Annee, Type, Libelle, Valeur 
+	$phql = "SELECT IdtObjectif, Annee, Type, Libelle, Valeur, IdtCompte
 			FROM tabobjectif 
 			WHERE IdtCompte = :id:";
 	$objectifs = $app->modelsManager->executeQuery($phql, array(
@@ -727,7 +1060,8 @@ $app->get('/api/objectifs/{id: [0-9]+}', function($id) use ($app) {
 			'annee' => $objectif->Annee, 
 			'type' => $objectif->Type,
 			'libelle' => $objectif->Libelle,
-			'valeur' => $objectif->Valeur
+			'valeur' => $objectif->Valeur,
+			'compte_id' => $objectif->IdtCompte
 		);
 	}
 	
@@ -739,14 +1073,12 @@ $app->get('/api/objectifs/{id: [0-9]+}', function($id) use ($app) {
 ** 	     SATISFACTIONS
 **
 *************************************/
-$app->get('/api/satisfactions/{id: [0-9]+}', function($id) use ($app) {
+$app->get('/api/satisfactions', function() use ($app) {
 	
-	$phql = "SELECT IdtSatisfaction, Nom, DateEnvoi, DateRecu 
-			FROM tabsatisfaction 
-			WHERE IdtSociete = :id:";
-	$satisfactions = $app->modelsManager->executeQuery($phql, array(
-		'id' => $id
-	));
+	$phql = "SELECT IdtSatisfaction, Nom, DateEnvoi, DateRecu, IdtSociete
+			FROM tabsatisfaction";
+			/*WHERE IdtSociete = :id:";*/
+	$satisfactions = $app->modelsManager->executeQuery($phql);
 	
 	$donnees = array();
 	
@@ -754,8 +1086,9 @@ $app->get('/api/satisfactions/{id: [0-9]+}', function($id) use ($app) {
 		$donnees[] = array(
 			'id' => $satisfaction->IdtSatisfaction, 
 			'nom' => $satisfaction->Nom, 
-			'denvoi' => $satisfaction->DateEnvoi,
-			'drecu' => $satisfaction->DateRecu
+			'date_envoi' => $satisfaction->DateEnvoi,
+			'date_recu' => $satisfaction->DateRecu,
+			'id_societe' => $satisfaction->IdtSociete
 		);
 	}
 	
@@ -770,7 +1103,7 @@ $app->get('/api/satisfactions/{id: [0-9]+}', function($id) use ($app) {
 *************************************/
 $app->get('/api/reponses', function() use ($app) {
 	
-	$phql = "SELECT Idt, Question, Reponse, Categorie, Type, IdtSatisfaction 
+	$phql = "SELECT IdtQuestion, Question, Reponse, Categorie, Type, IdtSatisfaction 
 			FROM tabreponse";
 	$reponses = $app->modelsManager->executeQuery($phql);
 	
@@ -778,17 +1111,49 @@ $app->get('/api/reponses', function() use ($app) {
 	
 	foreach( $reponses as $reponse){
 		$donnees[] = array(
-			'id' => $reponse->Idt, 
+			'id' => $reponse->IdtQuestion, 
 			'question' => $reponse->Question, 
 			'reponse' => $reponse->Reponse,
 			'categorie' => $reponse->Categorie,
-			'type' => $reponse->Type
+			'type' => $reponse->Type,
+			'id_satisfaction' => $reponse->IdtSatisfaction
 		);
 	}
 	
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 	
 });
+
+/************************************
+**
+** 	     STOCK
+**
+*************************************/
+$app->get('/api/stocks', function() use ($app) {
+	
+	$phql = "SELECT tp.IdtProduit, COUNT(ts.Produit_id) quantite, 15 as delaismoy, 15 as delais
+				FROM tabproduits tp
+				LEFT JOIN tabstock ts ON tp.IdtProduit = ts.Produit_id
+				WHERE ts.DateSortie IS NULL
+				GROUP BY tp.IdtProduit";
+				
+	$stocks = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $stocks as $stock){
+		$donnees[] = array(
+			'id' => $stock->IdtProduit, 
+			'quantite' => $stock->quantite, 
+			'delaisMoy' => $stock->delaismoy,
+			'delais' => $stock->delais
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
+				
+});
+
 
 //Gestionnaire
 $app->handle();
