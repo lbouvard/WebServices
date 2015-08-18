@@ -36,7 +36,7 @@ $app = new \Phalcon\Mvc\Micro($base);
 *************************************/
 $app->get('/api/utilisateurs', function() use ($app) {
 	
-	$phql = "SELECT user.IdtUtilisateur, user.Nom, user.MotDePasse, user.Email, user.Salt 
+	$phql = "SELECT user.IdtUtilisateur, user.Nom, user.MotDePasse, user.Email, user.Salt, con.Utilisateur_id 
 			FROM tabsociete soc
 			INNER JOIN tabcontact con ON soc.IdtSociete = con.Societe_id
 			INNER JOIN tabutilisateur user ON con.Utilisateur_id = user.IdtUtilisateur
@@ -49,13 +49,50 @@ $app->get('/api/utilisateurs', function() use ($app) {
 		$donnees[] = array(
 				'id' => $user->IdtUtilisateur, 
 				'nom' => $user->Nom, 
-				'motDePasse' => $user->MotDePasse,
-				'mail' => $user->Email,
-				'salt' => $user->Salt
+				'mdp' => $user->MotDePasse,
+				'email' => $user->Email,
+				'salt' => $user->Salt,
+				'contact_id' => $user->Utilisateur_id
 				);
 	}
 	
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
+});
+
+$app->get('/api/commerciaux', function() use ($app) {
+	
+	$phql = "SELECT con.IdtContact, con.NomContact, con.PrenomContact, con.IntitulePoste, 
+			con.TelFixe, con.TelMobile, con.Fax, con.Email, con.Adresse, con.CodePostal, con.Ville, con.Pays, 
+			con.Commentaire, con.Auteur, con.DateModif, con.BitModif, con.BitSup, con.Societe_id, con.Utilisateur_id
+			FROM tabcontact con
+			INNER JOIN tabsociete soc ON con.Societe_id = soc.IdtSociete
+			WHERE con.BitModif = 0 AND con.BitSup = 0 AND soc.TypeSociete = 'M' 
+			ORDER BY IdtContact";
+	$commerciaux = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $commerciaux as $commercial){
+		$donnees[] = array(
+				'id' => $commercial->IdtContact, 
+				'nom' => $commercial->NomContact,
+				'prenom' => $commercial->PrenomContact,
+				'poste' => $commercial->IntitulePoste,
+				'tel_fixe' => $commercial->TelFixe,
+				'tel_mobile' => $commercial->TelMobile,
+				'fax' => $commercial->Fax,
+				'email' => $commercial->Email,
+				'adresse' => $commercial->Adresse,
+				'code_postal' => $commercial->CodePostal,
+				'ville' => $commercial->Ville,
+				'pays' => $commercial->Pays,
+				'commentaire' => $commercial->Commentaire,
+				'auteur' => $commercial->Auteur,
+				'id_societe' => $commercial->Societe_id
+				);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);	
 });
 
 /************************************
