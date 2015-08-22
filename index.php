@@ -1075,6 +1075,28 @@ $app->post('/api/parametres/maj', function() use ($app) {
 	
 });
 
+$app->post('/api/paramadmin/maj', function() use ($app) {
+
+	$params = $app->request->getJsonRawBody();
+	
+	foreach($params as $param){
+		
+		//maj
+		$phql = "UPDATE tabparametre SET Valeur = :valeur: WHERE Nom = :nom:";
+				
+		$etat = $app->modelsManager->executeQuery($phql, array(
+			'valeur' => $param->valeur,
+			'nom' => $param->nom
+		));
+		
+		if( $etat->success() != true ){
+			foreach( $etat->getMessages() as $message){
+				 error_log($message->getMessage(), 0);
+			}	
+		}
+	}	
+});
+
 /************************************
 **
 ** 	     OBJECTIFS
