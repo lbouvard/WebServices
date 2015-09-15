@@ -1137,7 +1137,7 @@ $app->get('/api/objectifs/{id:[0-9]+}', function($id) use ($app) {
 *************************************/
 $app->get('/api/satisfactions', function() use ($app) {
 	
-	$phql = "SELECT IdtSatisfaction, Nom, DateEnvoi, DateRecu, IdtSociete
+	$phql = "SELECT IdtSatisfaction, Nom, DateEnvoi, DateRecu, Corps, Lien, Contact, IdtSociete
 			FROM tabsatisfaction";
 			/*WHERE IdtSociete = :id:";*/
 	$satisfactions = $app->modelsManager->executeQuery($phql);
@@ -1150,6 +1150,9 @@ $app->get('/api/satisfactions', function() use ($app) {
 			'nom' => $satisfaction->Nom, 
 			'date_envoi' => $satisfaction->DateEnvoi,
 			'date_recu' => $satisfaction->DateRecu,
+			'corps' => $satisfaction->Corps,
+			'lien' => $satisfaction->Lien,
+			'contact' => $satisfaction->Contact,
 			'id_societe' => $satisfaction->IdtSociete
 		);
 	}
@@ -1165,7 +1168,7 @@ $app->get('/api/satisfactions', function() use ($app) {
 *************************************/
 $app->get('/api/reponses', function() use ($app) {
 	
-	$phql = "SELECT IdtQuestion, Question, Reponse, Categorie, Type, IdtSatisfaction 
+	$phql = "SELECT IdtQuestion, Question, Reponse, Categorie, Type, Niveau, IdtSatisfaction 
 			FROM tabreponse";
 	$reponses = $app->modelsManager->executeQuery($phql);
 	
@@ -1178,6 +1181,7 @@ $app->get('/api/reponses', function() use ($app) {
 			'reponse' => $reponse->Reponse,
 			'categorie' => $reponse->Categorie,
 			'type' => $reponse->Type,
+			'niveau' => $reponse->Niveau,
 			'id_satisfaction' => $reponse->IdtSatisfaction
 		);
 	}
