@@ -603,7 +603,7 @@ $app->post('/api/contacts/maj', function() use ($app) {
 *************************************/
 $app->get('/api/bons', function() use ($app) {
 
-	$phql = "SELECT IdtCommande, DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, DateChg, BitChg, Devis_id, Contact_id, Societe_id
+	$phql = "SELECT IdtCommande, NumeroCommande, DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, DateChg, BitChg, Devis_id, Contact_id, Societe_id
 			FROM tabcommande 
 			WHERE BitSup = 0";
 	$bons = $app->modelsManager->executeQuery($phql);
@@ -612,7 +612,8 @@ $app->get('/api/bons', function() use ($app) {
 	
 	foreach( $bons as $bon){
 		$donnees[] = array(
-			'id' => $bon->IdtCommande, 
+			'id' => $bon->IdtCommande,
+			'numero_commande' => $bon->NumeroCommande,
 			'date_commande' => $bon->DateCommande, 
 			'etat_commande' => $bon->EtatCommande,
 			'commentaire' => $bon->Commentaire,
@@ -643,15 +644,18 @@ $app->post('/api/bons/ajt', function() use ($app) {
 			
 		//insertion en base
 		$phql = "INSERT INTO tabcommande 
-				(DateCommande, EtatCommande, Commentaire, Type, Auteur, DateChg, BitChg, BitSup, Devis_id, Contact_id, Societe_id) 
+				(NumeroCommande, DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, DateChg, BitChg, BitSup, Devis_id, Contact_id, Societe_id) 
 				VALUES
-				(:date_commande:, :etat:, :commentaire:, :type:, :auteur:, NULL, 0, 0, :devis_id:, :contact_id:, :societe_id:)";
+				(:numero_commande:, :date_commande:, :etat:, :commentaire:, :type:, :suivi:, :transporteur:, :auteur:, NULL, 0, 0, :devis_id:, :contact_id:, :societe_id:)";
 		
 		$etat = $app->modelsManager->executeQuery($phql, array(
+			'numero_commande' => $bon->numero_commande,
 			'date_commande' => $bon->date_commande,
 			'etat' => $bon->etat_commande,
-			'commentaire' => $bon->commentaire,
+			'commentaire' => "",
 			'type' => $bon->type,
+			'suivi' => "",
+			'transporteur' => "",
 			'auteur' => $bon->auteur,
 			'devis_id' => $bon->devis_id,
 			'contact_id' => $bon->commercial_id,
@@ -692,7 +696,7 @@ $app->post('/api/bons/maj', function() use ($app) {
 		
 		if( !$bon->ASupprimer ){
 			//on sauvegarde les valeurs en cours
-			$phql = "SELECT DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, Devis_id, Contact_id, Societe_id 
+			$phql = "SELECT NumeroCommande, DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, Devis_id, Contact_id, Societe_id 
 					FROM tabcommande WHERE IdtCommande = :id:";
 			$sauvegarde = $app->modelsManager->executeQuery($phql, array(
 				'id' => $bon->id
@@ -701,11 +705,12 @@ $app->post('/api/bons/maj', function() use ($app) {
 			error_log(var_export($sauvegarde, true));
 			
 			$phql = "INSERT INTO tabcommande 
-				(DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, DateChg, BitChg, BitSup, Devis_id, Contact_id, Societe_id) 
+				(NumeroCommande, DateCommande, EtatCommande, Commentaire, Type, Suivi, Transporteur, Auteur, DateChg, BitChg, BitSup, Devis_id, Contact_id, Societe_id) 
 				VALUES
-				(:date_commande:, :etat:, :commentaire:, :type:, :suivi:, :transporteur:, :auteur:, NOW(), 1, 0, :devis_id:, :contact_id:, :societe_id:)";
+				(:numero_commande:, :date_commande:, :etat:, :commentaire:, :type:, :suivi:, :transporteur:, :auteur:, NOW(), 1, 0, :devis_id:, :contact_id:, :societe_id:)";
 				
 			$etat = $app->modelsManager->executeQuery($phql, array(
+				'numero_commande' => $sauvegarde->NumeroCommande,
 				'date_commande' => $sauvegarde->DateCommande,
 				'etat' => $sauvegarde->EtatCommande,
 				'commentaire' => $sauvegarde->Commentaire,
@@ -1160,6 +1165,58 @@ $app->get('/api/satisfactions', function() use ($app) {
 	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
 	
 });
+$app->post('/api/satisfactions/ajt', function() use ($app) {
+	
+	$satis = $app->request->getJsonRawBody();
+	$etats = array();
+	$erreur = false;
+	
+	//Pour chaque bon ou devis
+	foreach( $satis as $sat ){
+			
+		//error_log(var_export($event, true), 0);
+		
+		//insertion en base
+		$phql = "INSERT INTO tabsatisfaction
+					(Nom, DateEnvoi, DateRecu, Corps, Lien, Contact, IdtSociete) 
+				VALUES
+					(:nom:, :date_envoi:, :date_recu:, :corps:, :lien:, :contact:, :id_societe:)";
+		
+		$etat = $app->modelsManager->executeQuery($phql, array(
+			'nom' => $sat->nom,
+			'date_envoi' => $sat->date_envoi,
+			'date_recu' => $sat->date_recu,
+			'corps' => $sat->corps,
+			'lien' => $sat->lien,
+			'contact' => $sat->contact,
+			'id_societe' => $sat->id_societe
+		));
+		
+		if( $etat->success() == true ){
+			$etats[] = array('Etat' => 'OK', 'NewId' => $etat->getModel()->IdtEvent, 'OldId' => $sat->id );
+		}
+		else{
+			$erreurs[] = array();
+			
+			foreach( $etat->getMessages() as $message ){
+				$erreurs[] = $message->getMessage();
+			}
+			
+			$etats[] = array('Etat' => 'KO', 'Id' => -1, 'Erreur' => $erreurs);
+			
+			$erreur = true;
+			
+		}
+	}
+	
+	$reponse = new Phalcon\Http\Response();
+	$reponse->setStatusCode(201, "Ajout réussi.");
+	
+	$reponse->setJsonContent($etats);
+	
+	return $reponse;
+});
+
 
 /************************************
 **
@@ -1220,6 +1277,32 @@ $app->get('/api/stocks', function() use ($app) {
 				
 });
 
+/************************************
+**
+** 	     CHOIX
+**
+*************************************/
+$app->get('/api/choix', function() use ($app) {
+	
+	$phql = "SELECT Idt, Type, Valeur
+			FROM tabchoix
+			ORDER BY Type";
+				
+	$stocks = $app->modelsManager->executeQuery($phql);
+	
+	$donnees = array();
+	
+	foreach( $stocks as $stock){
+		$donnees[] = array(
+			'idt' => $stock->Idt, 
+			'type' => $stock->Type, 
+			'valeur' => $stock->Valeur
+		);
+	}
+	
+	echo json_encode($donnees, JSON_UNESCAPED_UNICODE);
+				
+});
 
 //Gestionnaire
 $app->handle();
